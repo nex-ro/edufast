@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#FFFFFF">
+
+    <!-- Toolbar dengan title rata tengah -->
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="#4285F4"
+        app:title="Guru Terfavorit"
+        app:titleCentered="true"
+        app:titleTextColor="@android:color/white"
+        app:navigationIcon="@drawable/ic_back" />
+
+    <!-- Chip Filter Horizontal -->
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="8dp"
+        android:scrollbars="none">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <!-- Chip All -->
+            <com.google.android.material.chip.Chip
+                style="@style/Widget.MaterialComponents.Chip.Choice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="All"
+                android:checked="true"
+                android:textColor="@android:color/white"
+                android:layout_marginEnd="12dp"
+                app:chipBackgroundColor="@color/blue"
+                app:chipStrokeColor="@color/blue"
+                app:chipStrokeWidth="1dp" />
+
+            <!-- Chip Biologi -->
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Biologi"
+                android:textColor="#4285F4"
+                android:layout_marginEnd="12dp"
+                app:chipStrokeColor="#4285F4"
+                app:chipStrokeWidth="1dp"
+                app:chipBackgroundColor="@android:color/white" />
+
+            <!-- Chip B.Inggris -->
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="B.Inggris"
+                android:textColor="#4285F4"
+                android:layout_marginEnd="12dp"
+                app:chipStrokeColor="#4285F4"
+                app:chipStrokeWidth="1dp"
+                app:chipBackgroundColor="@android:color/white" />
+
+            <!-- Chip Fisika -->
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Fisika"
+                android:textColor="#4285F4"
+                android:layout_marginEnd="12dp"
+                app:chipStrokeColor="#4285F4"
+                app:chipStrokeWidth="1dp"
+                app:chipBackgroundColor="@android:color/white" />
+
+            <!-- Chip Matematika -->
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Matematika"
+                android:layout_marginEnd="12dp"
+                android:textColor="#4285F4"
+                app:chipBackgroundColor="@android:color/white"
+                app:chipStrokeColor="#4285F4"
+                app:chipStrokeWidth="1dp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- RecyclerView untuk daftar guru -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvGuruFavorit"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp" />
+</LinearLayout>

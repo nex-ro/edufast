@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.tampilansiswa">
+    <!-- Izin untuk akses internet (dibutuhkan Firebase) -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:name=".MyApp"
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/logo"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/logo_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.TampilanSiswa"
+        tools:targetApi="31">
+        <activity
+            android:name=".Dashboard.GuruMainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NotifikasiActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Pemesanan.DetailPembayaranActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Pemesanan.PemesananActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Profile.EditProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Guru.GuruFavoritActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Guru.GuruTerbaikActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Onboarding.OnboardingActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity> <!-- Daftar semua Activity -->
+        <activity
+            android:name=".SplashActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Auth.SignInActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Auth.SignUpActivity"
+            android:exported="false" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Detail.DetailGuruActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Guru.GuruActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Ulasan.UlasanActivity"
+            android:exported="false" />
+        <activity
+            android:name=".Kursus.KursusSayaActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

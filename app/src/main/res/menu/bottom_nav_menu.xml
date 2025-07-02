@@ -1,0 +1,14 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/menu_home"
+        android:icon="@drawable/ic_home"
+        android:title="Beranda" />
+    <item
+        android:id="@+id/menu_notifikasi"
+        android:icon="@drawable/ic_notification"
+        android:title="Notifikasi" />
+    <item
+        android:id="@+id/menu_akun"
+        android:icon="@drawable/ic_user"
+        android:title="Akun" />
+</menu>

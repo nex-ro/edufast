@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "581392133597",
+    "project_id": "edufast-deebf",
+    "storage_bucket": "edufast-deebf.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581392133597:android:0089e413d29b5d63dc9a34",
+        "android_client_info": {
+          "package_name": "com.example.tampilansiswa"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCrlulZw7ezsqHtQj5TAWE7RwcUyNPdGfc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

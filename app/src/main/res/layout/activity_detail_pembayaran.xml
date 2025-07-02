@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF">
+
+    <LinearLayout
+        android:id="@+id/layoutRoot"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <!-- Header -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="16dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_back"
+                android:layout_marginEnd="16dp"
+                android:contentDescription="Kembali" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pembayaran"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="#1B1B1B" />
+        </LinearLayout>
+
+        <!-- Informasi Gender -->
+        <TextView
+            android:id="@+id/txtGender"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Jenis Kelamin: -"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp" />
+
+        <!-- Informasi Metode Bayar -->
+        <TextView
+            android:id="@+id/txtMetode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Metode Bayar: -"
+            android:textSize="14sp"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Placeholder untuk Program, Tanggal, dan Jam -->
+        <TextView
+            android:id="@+id/txtProgram"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:visibility="visible"
+            android:layout_marginBottom="4dp"/>
+        <TextView
+            android:id="@+id/txtTanggal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:visibility="visible"
+            android:layout_marginBottom="4dp"/>
+        <TextView
+            android:id="@+id/txtJam"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:visibility="visible"
+            android:layout_marginBottom="12dp"/>
+
+        <!-- Total Pembayaran -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Total Pembayaran"
+            android:textStyle="bold"
+            android:textColor="#1B1B1B"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/txtTotal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Rp 52.000"
+            android:textColor="#0B4DFA"
+            android:textSize="16sp"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Bayar Dalam -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bayar Dalam"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/txtCountdown"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="23 jam 50 menit 15 detik"
+            android:textColor="#0B4DFA"
+            android:layout_marginBottom="4dp" />
+
+        <TextView
+            android:id="@+id/txtJatuhTempo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Jatuh tempo 19 Jan 2025 14:25"
+            android:textColor="#555555"
+            android:layout_marginBottom="16dp" />
+
+        <!-- Bank -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <ImageView
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:src="@drawable/ic_bri"
+                android:layout_marginEnd="8dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Bank Rakyat Indonesia (BRI)"
+                android:textColor="#000000" />
+        </LinearLayout>
+
+        <!-- Nomor Rekening -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="No. Rekening"
+            android:textStyle="bold"
+            android:layout_marginTop="8dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/txtRekening"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="112 0896 2357 9810"
+                android:textSize="18sp"
+                android:textColor="#0B4DFA"
+                android:textStyle="bold" />
+
+            <TextView
+                android:text="Salin"
+                android:textColor="#0B4DFA"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
+
+        <!-- ... sisa layout tetap persis seperti sebelumya ... -->
+
+        <!-- Tombol OK -->
+        <Button
+            android:id="@+id/btnOK"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="OK"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#4285F4"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="16dp" />
+
+    </LinearLayout>
+</ScrollView>
