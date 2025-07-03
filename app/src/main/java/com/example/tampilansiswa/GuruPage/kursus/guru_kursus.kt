@@ -317,31 +317,25 @@ class guru_kursus : Fragment() {
         )
 
         showLoading(true)
+        coursesCollection.add(course.copy(id = "")) // sementara tetap kosong
+            .addOnSuccessListener { documentReference ->
+                val courseWithId = course.copy(id = documentReference.id)
+                coursesCollection.document(documentReference.id).set(courseWithId)
+                    .addOnSuccessListener {
+                        showLoading(false)
+                        Toast.makeText(requireContext(), "Kursus berhasil ditambahkan", Toast.LENGTH_SHORT).show()
+                        dialog.dismiss()
+                    }
+                    .addOnFailureListener { e ->
+                        showLoading(false)
+                        showError("Gagal menyimpan ID kursus: ${e.message}")
+                    }
+            }
+            .addOnFailureListener { e ->
+                showLoading(false)
+                showError("Gagal menambahkan kursus: ${e.message}")
+            }
 
-        if (courseToEdit == null) {
-            coursesCollection.add(course)
-                .addOnSuccessListener {
-                    showLoading(false)
-                    Toast.makeText(requireContext(), "Kursus berhasil ditambahkan", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                }
-                .addOnFailureListener { e ->
-                    showLoading(false)
-                    showError("Gagal menambahkan kursus: ${e.message}")
-                }
-        } else {
-            coursesCollection.document(course.id)
-                .set(course)
-                .addOnSuccessListener {
-                    showLoading(false)
-                    Toast.makeText(requireContext(), "Kursus berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                    dialog.dismiss()
-                }
-                .addOnFailureListener { e ->
-                    showLoading(false)
-                    showError("Gagal memperbarui kursus: ${e.message}")
-                }
-        }
     }
 
     private fun toggleCourseStatus(course: Course) {

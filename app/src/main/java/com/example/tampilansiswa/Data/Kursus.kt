@@ -1,9 +1,20 @@
 package com.example.tampilansiswa.Data
 
 data class Kursus(
-    val namaGuru: String,
-    val waktu: String,
-    val tanggal: String,
-    val avatar: Int,
-    val status: String // "Selesai" atau "Belum"
+    val namaGuru: String = "",
+    val waktu: String = "",
+    val tanggal: String = "",
+    val avatar: Int = 0,
+    val status: String = "",
+    val courseName: String = "",
+    val courseType: String = "",
+    val description: String = "",
+    val level: String = "",
+    val subject: String = "",
+    val fullLocation: String = "",
+    val formattedPrice: String = "",
+    val formattedDuration: String = "",
+    val enrollmentId: String = "",
+    val courseId: String = "",
+    val teacherId: String = ""
 )

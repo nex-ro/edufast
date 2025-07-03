@@ -189,6 +189,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        android:id="@+id/siswabutton"
                         android:orientation="vertical"
                         android:gravity="center"
                         android:padding="20dp">
@@ -196,7 +197,7 @@
                         <ImageView
                             android:layout_width="40dp"
                             android:layout_height="40dp"
-                            android:src="@drawable/ic_lightbulb"
+                            android:src="@drawable/ic_person"
                             android:layout_marginBottom="10dp" />
 
                         <TextView

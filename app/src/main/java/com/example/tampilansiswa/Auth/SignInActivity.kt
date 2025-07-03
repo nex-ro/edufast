@@ -135,7 +135,6 @@ class SignInActivity : AppCompatActivity() {
     private fun handleProfileImage(editor: android.content.SharedPreferences.Editor, profileImage: String?) {
         try {
             if (!profileImage.isNullOrEmpty()) {
-                // Jika ada gambar dari Firestore, simpan ke preferences
                 editor.putString("profileImage", profileImage)
                 Log.d(TAG, "Profile image from Firestore saved to preferences")
             } else {

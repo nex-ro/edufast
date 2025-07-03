@@ -1,6 +1,7 @@
 package com.example.tampilansiswa.Profile
 
 import android.app.Activity
+import com.google.firebase.firestore.SetOptions
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -15,10 +16,13 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.bumptech.glide.Glide
 import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentEditProfileBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import java.io.File
+import java.io.FileOutputStream
 import java.io.IOException
 
 class EditProfile : Fragment() {
@@ -93,8 +97,14 @@ class EditProfile : Fragment() {
         binding.etNama.setText(sharedPref.getString("nama", ""))
         binding.etEmail.setText(sharedPref.getString("email", ""))
         binding.etPhone.setText(sharedPref.getString("phone", ""))
-        val imageBase64 = sharedPref.getString("profileImage", null)
-        loadImageFromBase64(imageBase64)
+
+        val imagePath = sharedPref.getString("profileImageUrl", null)
+        if (!imagePath.isNullOrEmpty()) {
+            Glide.with(this)
+                .load(File(imagePath))
+                .placeholder(R.drawable.avatar1)
+                .into(binding.ivAvatar)
+        }
 
         uid?.let {
             db.collection("users").document(uid).get()
@@ -116,102 +126,82 @@ class EditProfile : Fragment() {
         }
     }
 
-    private fun loadImageFromBase64(imageBase64: String?) {
-        imageBase64?.let { base64String ->
-            try {
-                val decodedBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
-                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
-                binding.ivAvatar.setImageBitmap(bitmap)
-            } catch (e: Exception) {
-                e.printStackTrace()
-                binding.ivAvatar.setImageResource(R.drawable.avatar1)
-            }
-        }
-    }
-
     private fun saveProfile() {
         val nama = binding.etNama.text.toString().trim()
         val gender = binding.spinnerGender.selectedItem.toString()
         val email = binding.etEmail.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
 
-        if (nama.isEmpty()) {
-            binding.etNama.error = "Nama tidak boleh kosong"
-            return
-        }
-        if (email.isEmpty()) {
-            binding.etEmail.error = "Email tidak boleh kosong"
-            return
-        }
-        if (phone.isEmpty()) {
-            binding.etPhone.error = "Nomor HP tidak boleh kosong"
+        if (nama.isEmpty() || email.isEmpty() || phone.isEmpty()) {
+            Toast.makeText(requireContext(), "Lengkapi semua data", Toast.LENGTH_SHORT).show()
             return
         }
 
-        val uid = auth.currentUser?.uid
-        if (uid != null) {
-            selectedImageUri?.let { uri ->
-                saveImageToSharedPreferences(uri)
-            }
+        val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+        val uid = sharedPref.getString("uid", null) ?: return
 
-            val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("nama", nama)
-                putString("email", email)
-                putString("phone", phone)
-                putString("gender", gender)
-                apply()
-            }
+        // Ambil path gambar yang sudah ada dari SharedPreferences
+        var imagePath = sharedPref.getString("profileImageUrl", null)
 
-            val userMap = hashMapOf(
-                "nama" to nama,
-                "gender" to gender,
-                "email" to email,
-                "phone" to phone
-            )
+        // Jika ada gambar baru yang dipilih, simpan gambar baru
+        if (selectedImageUri != null) {
+            imagePath = saveImageToInternalStorage(selectedImageUri!!)
+        }
 
-            db.collection("users").document(uid)
-                .update(userMap as Map<String, Any>)
-                .addOnSuccessListener {
-                    Toast.makeText(requireContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                    requireActivity().onBackPressed()
+        val userMap = hashMapOf<String, Any>(
+            "nama" to nama,
+            "gender" to gender,
+            "email" to email,
+            "phone" to phone
+        )
+
+        // Selalu sertakan profileImageUrl jika ada
+        if (!imagePath.isNullOrEmpty()) {
+            userMap["profileImageUrl"] = imagePath
+        }
+
+        db.collection("users").document(uid)
+            .set(userMap, SetOptions.merge())
+            .addOnSuccessListener {
+                // Update SharedPreferences
+                with(sharedPref.edit()) {
+                    putString("nama", nama)
+                    putString("email", email)
+                    putString("phone", phone)
+                    putString("gender", gender)
+                    if (!imagePath.isNullOrEmpty()) {
+                        putString("profileImageUrl", imagePath)
+                    }
+                    apply()
                 }
-                .addOnFailureListener {
-                    Toast.makeText(requireContext(), "Gagal memperbarui profil", Toast.LENGTH_SHORT).show()
-                }
-        }
+
+                Toast.makeText(requireContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                requireActivity().onBackPressed()
+            }
+            .addOnFailureListener {
+                Toast.makeText(requireContext(), "Gagal memperbarui profil", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun saveImageToSharedPreferences(imageUri: Uri) {
-        try {
-            val inputStream = requireContext().contentResolver.openInputStream(imageUri)
+    private fun saveImageToInternalStorage(uri: Uri): String? {
+        return try {
+            val inputStream = requireContext().contentResolver.openInputStream(uri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            val resizedBitmap = resizeBitmap(bitmap, 200, 200)
-            val byteArrayOutputStream = java.io.ByteArrayOutputStream()
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
-            val byteArray = byteArrayOutputStream.toByteArray()
-            val base64String = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+            val filename = "profile_${System.currentTimeMillis()}.jpg"
+            val file = File(requireContext().filesDir, filename)
 
-            val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-            with(sharedPref.edit()) {
-                putString("profileImage", base64String)
-                apply()
-            }
-        } catch (e: IOException) {
+            val outputStream = FileOutputStream(file)
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            file.absolutePath
+        } catch (e: Exception) {
             e.printStackTrace()
-            Toast.makeText(requireContext(), "Gagal menyimpan gambar", Toast.LENGTH_SHORT).show()
+            null
         }
-    }
-
-    private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
-        val width = bitmap.width
-        val height = bitmap.height
-        val ratio = minOf(maxWidth.toFloat() / width, maxHeight.toFloat() / height)
-        val newWidth = (width * ratio).toInt()
-        val newHeight = (height * ratio).toInt()
-        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     }
 
     override fun onDestroyView() {

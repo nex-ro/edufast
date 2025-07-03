@@ -7,13 +7,11 @@
     app:cardCornerRadius="12dp"
     app:cardElevation="4dp"
     android:background="@android:color/white">
-
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="16dp">
-
         <!-- Course Image -->
         <ImageView
             android:id="@+id/iv_course_image"
@@ -22,7 +20,6 @@
             android:src="@drawable/avatar1"
             android:scaleType="centerCrop"
             android:background="@drawable/rounded_corner_8dp" />
-
         <!-- Course Content -->
         <LinearLayout
             android:layout_width="0dp"
@@ -30,7 +27,6 @@
             android:layout_weight="1"
             android:layout_marginStart="16dp"
             android:orientation="vertical">
-
             <!-- Course Name -->
             <TextView
                 android:id="@+id/tv_course_name"
@@ -42,7 +38,6 @@
                 android:textColor="@android:color/black"
                 android:maxLines="2"
                 android:ellipsize="end" />
-
             <!-- Subject and Level -->
             <LinearLayout
                 android:layout_width="match_parent"
@@ -89,8 +84,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_person"
-                    android:tint="@android:color/darker_gray" />
+                    android:src="@drawable/ic_person" />
 
                 <TextView
                     android:id="@+id/tv_course_type"
@@ -105,14 +99,13 @@
                     android:layout_width="16dp"
                     android:layout_height="16dp"
                     android:src="@drawable/ic_time"
-                    android:tint="@android:color/darker_gray"
                     android:layout_marginStart="16dp" />
 
                 <TextView
                     android:id="@+id/tv_duration"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="2 jam"
+                    android:text="2 menit"
                     android:textSize="12sp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginStart="4dp" />
@@ -129,8 +122,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_location"
-                    android:tint="@android:color/darker_gray" />
+                    android:src="@drawable/ic_location" />
 
                 <TextView
                     android:id="@+id/tv_location"
@@ -156,8 +148,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_calendar"
-                    android:tint="@android:color/darker_gray" />
+                    android:src="@drawable/ic_calendar" />
 
                 <TextView
                     android:id="@+id/tv_date"
@@ -196,32 +187,6 @@
                     android:textStyle="bold"
                     android:textColor="@color/primary_color" />
 
-                <TextView
-                    android:id="@+id/tv_status"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Aktif"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:background="@drawable/status_active_background"
-                    android:paddingStart="8dp"
-                    android:paddingEnd="8dp"
-                    android:paddingTop="4dp"
-                    android:paddingBottom="4dp"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/btn_message"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Pesan"
-                    android:textSize="12sp"
-                    android:textColor="@android:color/white"
-                    android:background="@drawable/message_button_background"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp" />
             </LinearLayout>
         </LinearLayout>
     </LinearLayout>

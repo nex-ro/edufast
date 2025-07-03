@@ -10,7 +10,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.example.tampilansiswa.Data.Guru
 import com.example.tampilansiswa.Guru.GuruActivity
 import com.example.tampilansiswa.Guru.GuruFragment
-import com.example.tampilansiswa.Kursus.KursusSayaActivity
 import com.example.tampilansiswa.Kursus.KursusSayaFragment
 import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentHomeBinding
@@ -49,8 +48,7 @@ class HomeFragment : Fragment() {
         }
 
         binding.menuKursus.setOnClickListener {
-            val intent = Intent(requireContext(), KursusSayaActivity::class.java)
-            startActivity(intent)
+            navigateToFragment(KursusSayaFragment())
         }
     }
     override fun onDestroyView() {

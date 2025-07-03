@@ -191,7 +191,6 @@ class guru_edit_profil : Fragment() {
             selectedImageUri?.let { uri ->
                 saveImageToSharedPreferences(uri)
             }
-
             // Simpan ke SharedPreferences
             val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
             with(sharedPref.edit()) {

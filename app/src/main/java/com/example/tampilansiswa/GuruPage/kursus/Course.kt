@@ -1,7 +1,7 @@
 package com.example.tampilansiswa.GuruPage.kursus
 
 data class Course(
-    val id: String = "",
+    var id: String = "",
     val courseName: String = "",
     val subject: String = "",
     val date: String = "",
@@ -20,7 +20,6 @@ data class Course(
     // Constructor kosong diperlukan untuk Firestore
     constructor() : this("", "", "", "", "", 0, "", "", "", "", "", 0, true, "", 0)
 
-    // Fungsi untuk mendapatkan format harga dengan mata uang
     fun getFormattedPrice(): String {
         return "Rp ${String.format("%,d", price)}"
     }

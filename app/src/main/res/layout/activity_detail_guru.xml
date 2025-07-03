@@ -42,7 +42,7 @@
                     android:id="@+id/txtNama"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Nama Guru"
+                    android:text="Guru"
                     android:textStyle="bold"
                     android:textSize="16sp" />
 
@@ -50,7 +50,7 @@
                     android:id="@+id/txtMapel"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Mata Pelajaran"
+                    android:text="Fisika - Kimia"
                     android:textColor="#777777"
                     android:textSize="14sp"
                     android:layout_marginTop="4dp" />
@@ -59,20 +59,36 @@
                     android:id="@+id/txtUniversitas"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Universitas"
+                    android:text="S1 Pendidikan PCR"
                     android:textColor="#777777"
                     android:textSize="13sp"
                     android:layout_marginTop="2dp" />
             </LinearLayout>
 
-            <TextView
-                android:id="@+id/txtHarga"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Rp XX.XXX / jam"
-                android:textColor="#4285F4"
-                android:textStyle="bold"
-                android:textSize="13sp" />
+                android:orientation="vertical"
+                android:gravity="end">
+
+                <TextView
+                    android:id="@+id/txtGender"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Laki-laki"
+                    android:textColor="#4285F4"
+                    android:textStyle="bold"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/txtPhone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0853562665"
+                    android:textColor="#777777"
+                    android:textSize="11sp"
+                    android:layout_marginTop="2dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <!-- Icon Info -->
@@ -145,7 +161,7 @@
                     android:id="@+id/txtRating"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="0.0" />
+                    android:text="5.0" />
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -176,7 +192,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Tentang -->
+        <!-- Tentang/Bio -->
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -189,10 +205,62 @@
             android:id="@+id/txtTentang"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Deskripsi guru..."
+            android:text="Saya seorang guru lulusan PCR ahli dibidang fisika dan kimia"
             android:textSize="14sp"
             android:layout_marginBottom="16dp" />
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Informasi Kontak"
+            android:textStyle="bold"
+            android:textSize="16sp"
+            android:layout_marginBottom="8dp" />
 
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_email"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:id="@+id/txtEmail"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="guru@gmail.com"
+                    android:textSize="14sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:padding="8dp">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:src="@drawable/ic_phone"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0853562665"
+                    android:textSize="14sp" />
+            </LinearLayout>
+        </LinearLayout>
         <!-- Tersedia -->
         <TextView
             android:layout_width="match_parent"
@@ -202,32 +270,15 @@
             android:textSize="16sp"
             android:layout_marginBottom="8dp" />
 
-        <LinearLayout
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvMataPelajaran"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_horizontal"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="16dp"
+            android:nestedScrollingEnabled="false" />
 
-            <TextView
-                android:id="@+id/txtHari1"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:padding="8dp"
-                android:background="@drawable/bg_chip_outline"
-                android:textColor="#4285F4"
-                android:layout_marginEnd="8dp" />
+        <!-- Informasi Kontak -->
 
-            <TextView
-                android:id="@+id/txtHari2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="-"
-                android:padding="8dp"
-                android:background="@drawable/bg_chip_outline"
-                android:textColor="#4285F4" />
-        </LinearLayout>
 
         <!-- Reviews List placeholder -->
         <TextView
@@ -245,7 +296,6 @@
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:layout_marginBottom="16dp"/>
-
 
         <!-- Tombol Pesan -->
         <Button

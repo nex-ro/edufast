@@ -72,7 +72,7 @@
                 <ImageView
                     android:layout_width="16dp"
                     android:layout_height="16dp"
-                    android:src="@drawable/ic_school" />
+                    android:src="@drawable/ic_schools" />
 
                 <TextView
                     android:id="@+id/tvUniversitas"

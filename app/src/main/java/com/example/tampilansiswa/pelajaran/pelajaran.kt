@@ -50,7 +50,19 @@ class pelajaran : Fragment() {
             .setQuery(query, config, Course::class.java)
             .build()
 
-        adapter = CoursePagingAdapter(options)
+        adapter = CoursePagingAdapter(options) { course ->
+            // Handle item click - navigate to detail fragment
+            navigateToDetailFragment(course)
+        }
         recyclerView.adapter = adapter
+    }
+
+    private fun navigateToDetailFragment(course: Course) {
+        val detailFragment = CourseDetailFragment.newInstance(course)
+
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.frame_container, detailFragment)
+            .addToBackStack(null)
+            .commit()
     }
 }

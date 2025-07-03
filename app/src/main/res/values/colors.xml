@@ -13,6 +13,7 @@
     <color name="primary_dark">#1976D2</color>
     <color name="primary_light">#BBDEFB</color>
     <color name="accent_color">#FF5722</color>
+    <color name="green">#4CAF50</color>
 
     <color name="background_color">#F5F5F5</color>
     <color name="status_background">#F0F0F0</color>
@@ -26,5 +27,11 @@
     <color name="error_color">#F44336</color>
     <color name="error_light">#FFEBEE</color>
     <color name="button_disabled">#BDBDBD</color>
+    <color name="gray_light">#E0E0E0</color>
+    <color name="red">#F44336</color>
+    <color name="unread_background">#F0F8FF</color>
+    <color name="divider_color">#EEEEEE</color>
+    <color name="orange">#FF9800</color>
+
 
 </resources>

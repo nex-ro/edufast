@@ -23,7 +23,7 @@
         android:textColor="#FFFFFF"
         android:background="@color/blue" />
 
-    <!-- Tab Container -->
+    <!-- Tab -->
     <LinearLayout
         android:id="@+id/tabContainer"
         android:layout_width="match_parent"
