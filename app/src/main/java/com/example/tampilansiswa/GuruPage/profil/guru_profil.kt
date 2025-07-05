@@ -15,11 +15,11 @@ import android.widget.Switch
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatDelegate
 import com.example.tampilansiswa.Onboarding.OnboardingActivity
-import com.example.tampilansiswa.Profile.EditProfile
 import com.example.tampilansiswa.Profile.EditProfileActivity
 import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentGuruProfilBinding
 import com.google.firebase.auth.FirebaseAuth
+import java.io.File
 
 class guru_profil : Fragment() {
 
@@ -39,7 +39,6 @@ class guru_profil : Fragment() {
 
         setupClickListeners()
         loadUserFromPreferences()
-        setupDarkModeSwitch()
 
         return binding.root
     }
@@ -51,16 +50,16 @@ class guru_profil : Fragment() {
         }
 
         binding.itemEditProfile.setOnClickListener {
-            navigateToFragment(EditProfile())
+            navigateToFragment(guru_edit_profil())
         }
 
         binding.imgProfile.setOnClickListener {
-            navigateToFragment(EditProfile())
+            navigateToFragment(guru_edit_profil())
         }
 
         // Mengatur Password
         binding.itemChangePassword.setOnClickListener {
-            Toast.makeText(requireContext(), "Fitur mengatur password akan segera hadir", Toast.LENGTH_SHORT).show()
+            navigateToFragment(Password())
         }
 
         // Mengatur Pembayaran
@@ -68,11 +67,6 @@ class guru_profil : Fragment() {
             navigateToFragment(PaymentMethodFragment())
         }
 
-        // Dark Mode Switch
-        binding.switchDarkMode.setOnCheckedChangeListener { _, isChecked ->
-            saveDarkModePreference(isChecked)
-            applyDarkMode(isChecked)
-        }
 
         // Logout
         binding.itemLogout.setOnClickListener {
@@ -80,11 +74,6 @@ class guru_profil : Fragment() {
         }
     }
 
-    private fun setupDarkModeSwitch() {
-        val sharedPref = requireContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
-        val isDarkMode = sharedPref.getBoolean("dark_mode", false)
-        binding.switchDarkMode.isChecked = isDarkMode
-    }
 
     private fun saveDarkModePreference(isDarkMode: Boolean) {
         val sharedPref = requireContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
@@ -158,33 +147,24 @@ class guru_profil : Fragment() {
     }
 
     private fun loadProfileImage(sharedPref: android.content.SharedPreferences) {
-        val base64Image = sharedPref.getString("profileImage", null)
+        val imagePath = sharedPref.getString("profileImage", null)
 
-        if (!base64Image.isNullOrEmpty()) {
-            try {
-                // Decode Base64 string ke byte array
-                val byteArray = Base64.decode(base64Image, Base64.DEFAULT)
-
-                // Convert byte array ke bitmap
-                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-
-                if (bitmap != null) {
-                    // Set bitmap ke ImageView
-                    binding.imgProfile.setImageBitmap(bitmap)
-                    Log.d(TAG, "Profile image loaded successfully")
-                } else {
-                    Log.w(TAG, "Failed to decode bitmap from Base64")
-                    setDefaultProfileImage()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error decoding profile image: ${e.message}")
+        if (!imagePath.isNullOrEmpty()) {
+            val file = java.io.File(imagePath)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                binding.imgProfile.setImageBitmap(bitmap)
+                Log.d(TAG, "Profile image loaded from local file")
+            } else {
+                Log.w(TAG, "Profile image file not found, using default")
                 setDefaultProfileImage()
             }
         } else {
-            Log.d(TAG, "No profile image found, using default")
+            Log.d(TAG, "No profile image path found, using default")
             setDefaultProfileImage()
         }
     }
+
 
     private fun setDefaultProfileImage() {
         binding.imgProfile.setImageResource(R.drawable.avatar1)

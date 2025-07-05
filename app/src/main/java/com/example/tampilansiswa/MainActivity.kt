@@ -4,11 +4,11 @@ import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import com.example.tampilansiswa.Dashboard.HomeFragment
+import com.example.tampilansiswa.Profile.AkunFragment
 import com.example.tampilansiswa.GuruPage.Dashboard_guru
 import com.example.tampilansiswa.GuruPage.profil.guru_profil
 //import com.example.tampilansiswa.Dashboard.DashboardGuruFragment
 import com.example.tampilansiswa.Notifikasi.NotifikasiFragment
-import com.example.tampilansiswa.Profile.AkunFragment
 import com.example.tampilansiswa.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {

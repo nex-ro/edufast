@@ -9,6 +9,7 @@ data class Kursus(
     val courseName: String = "",
     val courseType: String = "",
     val description: String = "",
+    val paymentProofPath: String = "",
     val level: String = "",
     val subject: String = "",
     val fullLocation: String = "",
@@ -16,5 +17,6 @@ data class Kursus(
     val formattedDuration: String = "",
     val enrollmentId: String = "",
     val courseId: String = "",
-    val teacherId: String = ""
+    val teacherId: String = "",
+    val poster:String=""
 )

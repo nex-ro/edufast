@@ -20,7 +20,14 @@ import java.util.*
 import com.example.tampilansiswa.R
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
-
+import android.net.Uri
+import java.io.File
+import android.provider.MediaStore
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.tampilansiswa.GuruPage.Dashboard_guru
+import java.io.FileOutputStream
+import java.io.InputStream
+import java.util.UUID
 class guru_kursus : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
@@ -29,6 +36,10 @@ class guru_kursus : Fragment() {
     private lateinit var tvEmpty: TextView
     private lateinit var fabAddCourse: FloatingActionButton
     private lateinit var tabLayout: TabLayout
+    private var selectedImageUri: Uri? = null
+    private var selectedImagePath: String? = null
+    private var imagePreview: ImageView? = null
+    val imagePath: String = ""
 
     private val db = FirebaseFirestore.getInstance()
     private val coursesCollection = db.collection("courses")
@@ -41,6 +52,7 @@ class guru_kursus : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+
         return inflater.inflate(R.layout.fragment_guru_kursus, container, false)
     }
 
@@ -54,6 +66,22 @@ class guru_kursus : Fragment() {
 
         fabAddCourse.setOnClickListener {
             showAddCourseDialog()
+        }
+        var btnback=view.findViewById<ImageView>(R.id.btn_back)
+        btnback.setOnClickListener{
+            navigateToFragment(Dashboard_guru())
+        }
+    }
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -171,6 +199,14 @@ class guru_kursus : Fragment() {
         val levelAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_dropdown_item_1line, levels)
         etLevel.setAdapter(levelAdapter)
 
+        imagePreview = dialogView.findViewById(R.id.imgPosterPreview)
+        selectedImageUri = null
+        selectedImagePath = null
+
+        imagePreview?.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
+
         courseToEdit?.let { course ->
             etCourseName.setText(course.courseName)
             etSubject.setText(course.subject)
@@ -183,6 +219,15 @@ class guru_kursus : Fragment() {
             etLevel.setText(course.level, false)
             etDescription.setText(course.description)
             etPrice.setText(course.price.toString())
+
+            // Tambahkan blok ini
+            course.poster?.let { path ->
+                val file = File(path)
+                if (file.exists()) {
+                    imagePreview?.setImageURI(Uri.fromFile(file))
+                    selectedImagePath = path
+                }
+            }
         }
 
         // Setup click listeners
@@ -229,6 +274,50 @@ class guru_kursus : Fragment() {
 
         dialog.show()
     }
+
+    private val pickImageLauncher = registerForActivityResult(
+        ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+            imagePreview?.setImageURI(uri)
+
+            // Simpan gambar ke internal storage
+            selectedImagePath = saveImageToInternalStorage(uri)
+
+            if (selectedImagePath == null) {
+                showError("Gagal menyimpan gambar")
+            }
+        }
+    }
+
+    private fun saveImageToInternalStorage(uri: Uri): String? {
+        return try {
+            val inputStream: InputStream? = requireContext().contentResolver.openInputStream(uri)
+            val fileName = "poster_${UUID.randomUUID()}.jpg"
+
+            // Buat direktori course_posters jika belum ada
+            val posterDir = File(requireContext().filesDir, "course_posters")
+            if (!posterDir.exists()) {
+                posterDir.mkdirs()
+            }
+
+            val file = File(posterDir, fileName)
+            val outputStream = FileOutputStream(file)
+
+            inputStream?.use { input ->
+                outputStream.use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            file.absolutePath
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
 
     private fun showDatePicker(onDateSelected: (String) -> Unit) {
         val calendar = Calendar.getInstance()
@@ -298,6 +387,16 @@ class guru_kursus : Fragment() {
             return
         }
 
+        // Tentukan path poster yang akan disimpan
+        val posterPath = when {
+            // Jika ada gambar baru yang dipilih
+            selectedImagePath != null -> selectedImagePath
+            // Jika sedang edit dan tidak ada gambar baru, gunakan gambar lama
+            courseToEdit != null -> courseToEdit.poster
+            // Jika tidak ada gambar sama sekali
+            else -> ""
+        }
+
         val course = Course(
             id = courseToEdit?.id ?: "",
             courseName = courseName,
@@ -313,29 +412,66 @@ class guru_kursus : Fragment() {
             price = priceInt,
             active = courseToEdit?.active ?: true,
             uid = uid,
-            createdAt = courseToEdit?.createdAt ?: System.currentTimeMillis()
+            createdAt = courseToEdit?.createdAt ?: System.currentTimeMillis(),
+            poster = posterPath.orEmpty()
         )
 
         showLoading(true)
-        coursesCollection.add(course.copy(id = "")) // sementara tetap kosong
-            .addOnSuccessListener { documentReference ->
-                val courseWithId = course.copy(id = documentReference.id)
-                coursesCollection.document(documentReference.id).set(courseWithId)
-                    .addOnSuccessListener {
-                        showLoading(false)
-                        Toast.makeText(requireContext(), "Kursus berhasil ditambahkan", Toast.LENGTH_SHORT).show()
-                        dialog.dismiss()
-                    }
-                    .addOnFailureListener { e ->
-                        showLoading(false)
-                        showError("Gagal menyimpan ID kursus: ${e.message}")
-                    }
-            }
-            .addOnFailureListener { e ->
-                showLoading(false)
-                showError("Gagal menambahkan kursus: ${e.message}")
-            }
 
+        if (courseToEdit != null) {
+            // Update course yang sudah ada
+            coursesCollection.document(courseToEdit.id)
+                .set(course)
+                .addOnSuccessListener {
+                    showLoading(false)
+                    Toast.makeText(requireContext(), "Kursus berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                    dialog.dismiss()
+                }
+                .addOnFailureListener { e ->
+                    showLoading(false)
+                    showError("Gagal memperbarui kursus: ${e.message}")
+                }
+        } else {
+            // Tambah course baru
+            coursesCollection.add(course.copy(id = ""))
+                .addOnSuccessListener { documentReference ->
+                    val courseWithId = course.copy(id = documentReference.id)
+                    coursesCollection.document(documentReference.id).set(courseWithId)
+                        .addOnSuccessListener {
+                            showLoading(false)
+                            Toast.makeText(requireContext(), "Kursus berhasil ditambahkan", Toast.LENGTH_SHORT).show()
+                            dialog.dismiss()
+                        }
+                        .addOnFailureListener { e ->
+                            showLoading(false)
+                            showError("Gagal menyimpan ID kursus: ${e.message}")
+                        }
+                }
+                .addOnFailureListener { e ->
+                    showLoading(false)
+                    showError("Gagal menambahkan kursus: ${e.message}")
+                }
+        }
+    }
+
+    private fun loadImageFromInternalStorage(imagePath: String, imageView: ImageView) {
+        if (imagePath.isNotEmpty()) {
+            val file = File(imagePath)
+            if (file.exists()) {
+                imageView.setImageURI(Uri.fromFile(file))
+            } else {
+                imageView.setImageResource(R.drawable.ic_img) // Ganti dengan drawable default Anda
+            }
+        }
+    }
+
+    private fun deleteOldImage(imagePath: String?) {
+        if (!imagePath.isNullOrEmpty()) {
+            val file = File(imagePath)
+            if (file.exists()) {
+                file.delete()
+            }
+        }
     }
 
     private fun toggleCourseStatus(course: Course) {

@@ -23,32 +23,41 @@
                 android:padding="16dp">
 
                 <!-- Header -->
-                <RelativeLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="100dp"
-                    android:background="#75A9E9"
-                    android:padding="12dp">
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:padding="16dp"
+                    android:background="@android:color/white"
+                    android:elevation="4dp">
 
                     <ImageView
-                        android:id="@+id/btnBack"
+                        android:id="@+id/btn_back"
                         android:layout_width="24dp"
                         android:layout_height="24dp"
-                        android:src="@drawable/ic_back"
-                        android:layout_alignParentStart="true"
-                        android:layout_centerVertical="true"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:background="?android:attr/selectableItemBackgroundBorderless" />
+                        android:layout_gravity="center_vertical"
+                        android:src="@drawable/ic_arrow_back"
+                        android:contentDescription="Back" />
 
                     <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_weight="1"
                         android:text="Edit Profile"
                         android:textSize="18sp"
-                        android:textColor="#FFFFFF"
                         android:textStyle="bold"
-                        android:layout_centerInParent="true" />
-                </RelativeLayout>
+                        android:textColor="@android:color/black"
+                        android:gravity="center"
+                        android:layout_marginStart="16dp" />
+
+                    <ImageView
+                        android:id="@+id/btn_notification"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center_vertical"
+                        android:contentDescription="Notifications" />
+
+                </LinearLayout>
 
                 <!-- Avatar -->
                 <RelativeLayout
@@ -153,7 +162,44 @@
                     android:textSize="14sp"
                     android:inputType="textCapSentences" />
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Subjek keahlian"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#000000"
+                    android:layout_marginTop="16dp" />
 
+                <EditText
+                    android:id="@+id/etsubjek"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Contoh: Matematika"
+                    android:background="@drawable/bg_edittext"
+                    android:padding="12dp"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:inputType="textCapSentences" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Domisili"
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#000000"
+                    android:layout_marginTop="16dp" />
+
+                <EditText
+                    android:id="@+id/etDomisili"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint=""
+                    android:background="@drawable/bg_edittext"
+                    android:padding="12dp"
+                    android:textColor="#000000"
+                    android:textSize="14sp"
+                    android:inputType="textCapSentences" />
                 <!-- Bio Singkat -->
                 <TextView
                     android:layout_width="wrap_content"

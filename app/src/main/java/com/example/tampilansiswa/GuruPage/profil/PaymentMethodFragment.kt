@@ -2,6 +2,7 @@ package com.example.tampilansiswa.GuruPage.profil
 
 // PaymentMethodFragment.kt
 import android.app.AlertDialog
+import android.media.Image
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -38,11 +39,26 @@ class PaymentMethodFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
+        val btnback=view.findViewById<ImageView>(R.id.btn_back)
+        btnback.setOnClickListener{
+            navigateToFragment(guru_profil())
+        }
         initViews(view)
         setupSpinner()
         setupClickListeners()
         loadExistingPaymentMethod()
+    }
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun initViews(view: View) {
@@ -76,6 +92,7 @@ class PaymentMethodFragment : Fragment() {
         btnHapus.setOnClickListener {
             showDeleteConfirmation()
         }
+
     }
 
     private fun loadExistingPaymentMethod() {

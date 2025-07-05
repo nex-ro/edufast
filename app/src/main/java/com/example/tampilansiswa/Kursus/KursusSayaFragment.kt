@@ -14,6 +14,9 @@ import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentKursusSayaBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import android.net.Uri
+import com.example.tampilansiswa.Dashboard.HomeFragment
+import java.io.File
 
 class KursusSayaFragment : Fragment() {
 
@@ -28,10 +31,10 @@ class KursusSayaFragment : Fragment() {
     private val selesaiList = mutableListOf<Kursus>()
     private val cancelList = mutableListOf<Kursus>()
 
-    // Add synchronization for thread safety
     private var coursesLoaded = 0
     private var totalCourses = 0
     private val loadingLock = Any()
+    private var currentTabType = TabType.PENDING
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -45,13 +48,27 @@ class KursusSayaFragment : Fragment() {
         setupRecyclerView()
         setupTabs()
         loadEnrollments()
+        binding.btnBack.setOnClickListener{
+            navigateToFragment(HomeFragment())
+        }
 
         return binding.root
     }
-
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
+        }
+    }
     private fun setupRecyclerView() {
         binding.rvKursus.layoutManager = LinearLayoutManager(requireContext())
-        adapter = KursusAdapter(pendingList)
+        adapter = KursusAdapter(pendingList, this)
         binding.rvKursus.adapter = adapter
     }
 
@@ -59,21 +76,25 @@ class KursusSayaFragment : Fragment() {
         updateTabUI(TabType.PENDING)
 
         binding.tabPending.setOnClickListener {
+            currentTabType = TabType.PENDING
             showKursus(pendingList)
             updateTabUI(TabType.PENDING)
         }
 
         binding.tabUpcoming.setOnClickListener {
+            currentTabType = TabType.UPCOMING
             showKursus(upcomingList)
             updateTabUI(TabType.UPCOMING)
         }
 
         binding.tabSelesai.setOnClickListener {
+            currentTabType = TabType.SELESAI
             showKursus(selesaiList)
             updateTabUI(TabType.SELESAI)
         }
 
         binding.tabCancel.setOnClickListener {
+            currentTabType = TabType.CANCEL
             showKursus(cancelList)
             updateTabUI(TabType.CANCEL)
         }
@@ -82,7 +103,7 @@ class KursusSayaFragment : Fragment() {
     private fun loadEnrollments() {
         val sharedPref = requireActivity().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
         val currentUser = sharedPref.getString("uid", "") ?: ""
-        if (currentUser == null) {
+        if (currentUser.isEmpty()) {
             Toast.makeText(requireContext(), "User not logged in", Toast.LENGTH_SHORT).show()
             return
         }
@@ -103,7 +124,6 @@ class KursusSayaFragment : Fragment() {
                 val enrollments = enrollmentDocs.mapNotNull { doc ->
                     try {
                         val enrollment = doc.toObject(enrollments::class.java)
-                        // Set the document ID if it's not already set
                         if (enrollment.id.isEmpty()) {
                             enrollment.copy(id = doc.id)
                         } else {
@@ -143,7 +163,6 @@ class KursusSayaFragment : Fragment() {
         }
 
         enrollments.forEach { enrollment ->
-            // Enhanced validation with logging
             if (enrollment.courseId.isEmpty()) {
                 Log.w("KursusSaya", "Enrollment has empty courseId: ${enrollment.id}")
                 handleCourseLoadComplete()
@@ -160,7 +179,6 @@ class KursusSayaFragment : Fragment() {
                         if (courseDoc.exists()) {
                             val course = courseDoc.toObject(Course::class.java)
                             if (course != null) {
-                                // Set the document ID if it's not already set
                                 val courseWithId = if (course.id.isEmpty()) {
                                     course.copy(id = courseDoc.id)
                                 } else {
@@ -189,13 +207,17 @@ class KursusSayaFragment : Fragment() {
         }
     }
 
-
+    // FIXED: Updated to include paymentProofPath from enrollment
     private fun createKursusFromData(enrollment: enrollments, course: Course, teacherName: String): Kursus {
+        // Log untuk debugging
+        Log.d("KursusSaya", "Creating Kursus with paymentProofPath: ${enrollment.paymentProofPath}")
+        Log.d("KursusSaya", "Course poster path: ${course.poster}")
+
         return Kursus(
             namaGuru = teacherName,
             waktu = course.startTime,
             tanggal = course.date,
-            avatar = R.drawable.avatar1, // Default avatar
+            avatar = R.drawable.avatar1,
             status = enrollment.status,
             courseName = course.courseName,
             courseType = course.courseType,
@@ -207,24 +229,26 @@ class KursusSayaFragment : Fragment() {
             formattedDuration = course.formattedDuration,
             enrollmentId = enrollment.id,
             courseId = course.id,
-            teacherId = course.uid
+            teacherId = course.uid,
+            paymentProofPath = enrollment.paymentProofPath ?: "",
+            poster = course.poster ?: ""
         )
     }
 
     private fun categorizeKursus(kursus: Kursus, status: String) {
         when (status.lowercase()) {
             "pending" -> pendingList.add(kursus)
-            "approved", "confirmed" -> upcomingList.add(kursus)
+            "approved", "confirmed","upcoming" -> upcomingList.add(kursus)
             "completed", "selesai" -> selesaiList.add(kursus)
             "cancelled", "cancel" -> cancelList.add(kursus)
             else -> {
-                Log.w("KursusSaya", "Unknown status: $status, defaulting to pending")
-                pendingList.add(kursus) // Default to pending
+                pendingList.add(kursus)
             }
         }
     }
+
+
     private fun loadTeacherAndCreateKursus(enrollment: enrollments, course: Course) {
-        // Enhanced validation and logging
         if (course.uid.isEmpty()) {
             Log.w("KursusSaya", "Course ${course.courseName} has empty teacher uid")
             val kursus = createKursusFromData(enrollment, course, "Teacher Not Assigned")
@@ -233,9 +257,9 @@ class KursusSayaFragment : Fragment() {
             return
         }
 
-        // Add retry mechanism for teacher loading
         loadTeacherWithRetry(enrollment, course, course.uid, 0)
     }
+
     private fun loadTeacherWithRetry(enrollment: enrollments, course: Course, teacherId: String, retryCount: Int) {
         val maxRetries = 2
 
@@ -249,7 +273,6 @@ class KursusSayaFragment : Fragment() {
                         "Teacher Not Found"
                     }
                     else -> {
-                        // Try multiple field names for teacher name
                         teacherDoc.getString("nama")
                             ?: run {
                                 Log.w("KursusSaya", "Teacher document exists but has no name fields: $teacherId")
@@ -266,20 +289,16 @@ class KursusSayaFragment : Fragment() {
                 Log.e("KursusSaya", "Error getting teacher (attempt ${retryCount + 1}): ", exception)
 
                 if (retryCount < maxRetries) {
-                    // Retry after a short delay
                     android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
                         loadTeacherWithRetry(enrollment, course, teacherId, retryCount + 1)
-                    }, 1000L * (retryCount + 1)) // Exponential backoff
+                    }, 1000L * (retryCount + 1))
                 } else {
-                    // All retries failed
                     val kursus = createKursusFromData(enrollment, course, "Teacher Load Failed")
                     categorizeKursus(kursus, enrollment.status)
                     handleCourseLoadComplete()
                 }
             }
     }
-
-
 
     private fun handleCourseLoadComplete() {
         synchronized(loadingLock) {
@@ -297,12 +316,39 @@ class KursusSayaFragment : Fragment() {
         activity?.runOnUiThread {
             try {
                 adapter.notifyDataSetChanged()
-
-                // Update tab counts (optional)
                 updateTabCounts()
+                updateEmptyState()
             } catch (e: Exception) {
                 Log.e("KursusSaya", "Error updating adapter: ", e)
             }
+        }
+    }
+
+    private fun updateEmptyState() {
+        if (!isAdded || _binding == null) return
+
+        val currentList = when (currentTabType) {
+            TabType.PENDING -> pendingList
+            TabType.UPCOMING -> upcomingList
+            TabType.SELESAI -> selesaiList
+            TabType.CANCEL -> cancelList
+        }
+
+        val isEmpty = currentList.isEmpty()
+
+        // Show/hide empty state
+        binding.layoutEmptyState.visibility = if (isEmpty) View.VISIBLE else View.GONE
+        binding.rvKursus.visibility = if (isEmpty) View.GONE else View.VISIBLE
+
+        // Update empty state text based on current tab
+        if (isEmpty) {
+            val emptyMessage = when (currentTabType) {
+                TabType.PENDING -> "Tidak ada kursus yang menunggu konfirmasi"
+                TabType.UPCOMING -> "Tidak ada kursus yang akan datang"
+                TabType.SELESAI -> "Tidak ada kursus yang telah selesai"
+                TabType.CANCEL -> "Tidak ada kursus yang dibatalkan"
+            }
+            binding.txtEmptyMessage.text = emptyMessage
         }
     }
 
@@ -317,40 +363,19 @@ class KursusSayaFragment : Fragment() {
     private fun showLoading(show: Boolean) {
         if (!isAdded || _binding == null) return
 
+        // Hide empty state when loading
+        if (show) {
+            binding.layoutEmptyState.visibility = View.GONE
+        }
+
         // Add your loading indicator here
         // binding.progressBar.visibility = if (show) View.VISIBLE else View.GONE
         // binding.rvKursus.visibility = if (show) View.GONE else View.VISIBLE
     }
+
     private fun refreshData() {
         showLoading(true)
         loadEnrollments()
-    }
-
-    // Optional: Add method to check data integrity
-    private fun checkDataIntegrity() {
-        val sharedPref = requireActivity().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
-        val currentUser = sharedPref.getString("uid", "") ?: ""
-
-        if (currentUser.isEmpty()) {
-            Log.e("KursusSaya", "User session is empty")
-            return
-        }
-
-        // Check if enrollments exist
-        db.collection("enrollments")
-            .whereEqualTo("studentId", currentUser)
-            .get()
-            .addOnSuccessListener { enrollmentDocs ->
-                Log.d("KursusSaya", "Found ${enrollmentDocs.size()} enrollments for user: $currentUser")
-
-                enrollmentDocs.forEach { doc ->
-                    val enrollment = doc.toObject(enrollments::class.java)
-                    Log.d("KursusSaya", "Enrollment: ${enrollment.id}, Course: ${enrollment.courseId}, Status: ${enrollment.status}")
-                }
-            }
-            .addOnFailureListener { exception ->
-                Log.e("KursusSaya", "Error checking enrollments: ", exception)
-            }
     }
 
     private fun updateTabUI(tabType: TabType) {
@@ -399,8 +424,9 @@ class KursusSayaFragment : Fragment() {
         if (!isAdded || _binding == null) return
 
         try {
-            adapter = KursusAdapter(data)
+            adapter = KursusAdapter(data, this)
             binding.rvKursus.adapter = adapter
+            updateEmptyState()
         } catch (e: Exception) {
             Log.e("KursusSaya", "Error showing kursus: ", e)
         }

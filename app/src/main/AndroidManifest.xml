@@ -21,27 +21,6 @@
         android:theme="@style/Theme.TampilanSiswa"
         tools:targetApi="31">
         <activity
-            android:name=".Dashboard.GuruMainActivity"
-            android:exported="false" />
-        <activity
-            android:name=".NotifikasiActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Pemesanan.DetailPembayaranActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Pemesanan.PemesananActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Profile.EditProfileActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Guru.GuruFavoritActivity"
-            android:exported="false" />
-        <activity
-            android:name=".Guru.GuruTerbaikActivity"
-            android:exported="false" />
-        <activity
             android:name=".Onboarding.OnboardingActivity"
             android:exported="true">
             <intent-filter>
@@ -49,7 +28,7 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity> <!-- Daftar semua Activity -->
+        </activity>
         <activity
             android:name=".SplashActivity"
             android:exported="false" />

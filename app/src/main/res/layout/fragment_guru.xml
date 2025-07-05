@@ -30,18 +30,6 @@
                 android:layout_marginBottom="16dp" />
 
             <!-- Search -->
-            <EditText
-                android:id="@+id/searchGuru"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:hint="Cari guru..."
-                android:drawableStart="@android:drawable/ic_menu_search"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:layout_marginBottom="16dp"
-                android:textColorHint="#999999"
-                android:textColor="#000000"
-                android:background="@drawable/bg_edittext" />
 
             <!-- Kategori: Favorite & Terbaik -->
             <LinearLayout
@@ -126,6 +114,28 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp" />
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/buttonContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:orientation="vertical"
+            android:layout_marginTop="16dp">
+
+            <!-- Load More Button -->
+            <Button
+                android:id="@+id/btnLihatSelanjutnya"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Lihat Selanjutnya"
+                android:textColor="@android:color/white"
+                android:background="@drawable/button_primary"
+                android:padding="12dp"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:visibility="gone" />
+
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.os.CountDownTimer
 import android.view.LayoutInflater
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -16,7 +17,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class DetailPembayaranActivity : AppCompatActivity() {
-
     private lateinit var txtGender: TextView
     private lateinit var txtMetode: TextView
     private lateinit var txtProgram: TextView
@@ -46,6 +46,7 @@ class DetailPembayaranActivity : AppCompatActivity() {
         txtJatuhTempo = findViewById(R.id.txtJatuhTempo)
         txtRekening   = findViewById(R.id.txtRekening)
         btnOK         = findViewById(R.id.btnOK)
+
 
         // Ambil data dari Intent
         val gender  = intent.getStringExtra("gender")  ?: "-"

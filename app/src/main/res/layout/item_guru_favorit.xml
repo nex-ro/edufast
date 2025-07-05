@@ -47,6 +47,14 @@
                 android:text="Mata Pelajaran"
                 android:textSize="14sp"
                 android:textColor="#666666" />
+            <TextView
+                android:id="@+id/tvdomisili"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Pekanbaru"
+                android:textSize="14sp"
+                android:textColor="#666666" />
+
 
             <!-- Garis horizontal -->
             <LinearLayout
@@ -115,14 +123,7 @@
             </LinearLayout>
 
             <!-- Jarak -->
-            <TextView
-                android:id="@+id/tvJarak"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="1.2 KM"
-                android:textColor="#4285F4"
-                android:textSize="13sp"
-                android:layout_marginTop="6dp" />
+
         </LinearLayout>
     </LinearLayout>
 </androidx.cardview.widget.CardView>

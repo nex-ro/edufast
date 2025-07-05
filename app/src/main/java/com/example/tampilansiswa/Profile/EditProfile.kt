@@ -1,7 +1,5 @@
 package com.example.tampilansiswa.Profile
-
 import android.app.Activity
-import com.google.firebase.firestore.SetOptions
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -16,15 +14,14 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.bumptech.glide.Glide
 import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentEditProfileBinding
+import com.example.tampilansiswa.databinding.FragmentGuruEditProfilBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
-
+import java.io.File          // ⬅️ Tambahkan ini
+import java.io.FileOutputStream
 class EditProfile : Fragment() {
 
     private var _binding: FragmentEditProfileBinding? = null
@@ -51,27 +48,35 @@ class EditProfile : Fragment() {
         savedInstanceState: Bundle?
     ): View {
         _binding = FragmentEditProfileBinding.inflate(inflater, container, false)
-
-        setupSpinner()
+        binding.btnBack.setOnClickListener{
+            parentFragmentManager.popBackStack()
+        }
+        setupSpinners()
         setupClickListeners()
         loadUserData(auth.currentUser?.uid)
 
         return binding.root
     }
 
-    private fun setupSpinner() {
-        val adapter = ArrayAdapter.createFromResource(
+    private fun setupSpinners() {
+        // Setup Gender Spinner
+        val genderAdapter = ArrayAdapter.createFromResource(
             requireContext(),
             R.array.gender_list,
             android.R.layout.simple_spinner_item
         )
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        binding.spinnerGender.adapter = adapter
+        genderAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerGender.adapter = genderAdapter
+
     }
 
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
-            requireActivity().onBackPressed()
+            parentFragmentManager.beginTransaction()
+                .replace(R.id.frame_container, AkunFragment()) // ganti R.id.fragment_container dengan ID container fragment kamu
+                .addToBackStack(null)
+                .commit()
+
         }
 
         binding.tvGantiFoto.setOnClickListener {
@@ -98,13 +103,8 @@ class EditProfile : Fragment() {
         binding.etEmail.setText(sharedPref.getString("email", ""))
         binding.etPhone.setText(sharedPref.getString("phone", ""))
 
-        val imagePath = sharedPref.getString("profileImageUrl", null)
-        if (!imagePath.isNullOrEmpty()) {
-            Glide.with(this)
-                .load(File(imagePath))
-                .placeholder(R.drawable.avatar1)
-                .into(binding.ivAvatar)
-        }
+        val path = sharedPref.getString("profileImage", null)
+        loadImageFromLocalPath(path)
 
         uid?.let {
             db.collection("users").document(uid).get()
@@ -114,10 +114,13 @@ class EditProfile : Fragment() {
                         binding.etEmail.setText(document.getString("email"))
                         binding.etPhone.setText(document.getString("phone"))
 
+                        // Set Gender Spinner
                         val gender = document.getString("gender")
-                        val adapter = binding.spinnerGender.adapter as ArrayAdapter<String>
-                        val genderIndex = adapter.getPosition(gender)
+                        val genderAdapter = binding.spinnerGender.adapter as ArrayAdapter<String>
+                        val genderIndex = genderAdapter.getPosition(gender)
                         if (genderIndex >= 0) binding.spinnerGender.setSelection(genderIndex)
+
+
                     }
                 }
                 .addOnFailureListener {
@@ -126,82 +129,148 @@ class EditProfile : Fragment() {
         }
     }
 
+    private fun loadImageFromLocalPath(path: String?) {
+        if (!path.isNullOrEmpty()) {
+            val file = File(path)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                binding.ivAvatar.setImageBitmap(null) // clear cache
+                binding.ivAvatar.setImageBitmap(bitmap)
+            } else {
+                binding.ivAvatar.setImageResource(R.drawable.avatar1)
+            }
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.avatar1)
+        }
+    }
+
+
     private fun saveProfile() {
         val nama = binding.etNama.text.toString().trim()
         val gender = binding.spinnerGender.selectedItem.toString()
         val email = binding.etEmail.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
 
-        if (nama.isEmpty() || email.isEmpty() || phone.isEmpty()) {
-            Toast.makeText(requireContext(), "Lengkapi semua data", Toast.LENGTH_SHORT).show()
+        // Validasi input
+        if (nama.isEmpty()) {
+            binding.etNama.error = "Nama tidak boleh kosong"
+            return
+        }
+        if (email.isEmpty()) {
+            binding.etEmail.error = "Email tidak boleh kosong"
+            return
+        }
+        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+            binding.etEmail.error = "Format email tidak valid"
+            return
+        }
+        if (phone.isEmpty()) {
+            binding.etPhone.error = "Nomor HP tidak boleh kosong"
+            return
+        }
+        if (phone.length < 10) {
+            binding.etPhone.error = "Nomor HP minimal 10 digit"
             return
         }
 
-        val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-        val uid = sharedPref.getString("uid", null) ?: return
 
-        // Ambil path gambar yang sudah ada dari SharedPreferences
-        var imagePath = sharedPref.getString("profileImageUrl", null)
 
-        // Jika ada gambar baru yang dipilih, simpan gambar baru
-        if (selectedImageUri != null) {
-            imagePath = saveImageToInternalStorage(selectedImageUri!!)
-        }
+        val sharedPref = requireContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
+        val uid = sharedPref.getString("uid", "") ?: ""
+        if (uid != null) {
+            selectedImageUri?.let { uri ->
+                saveImageToSharedPreferences(uri)
+            }
+            // Simpan ke SharedPreferences
+            val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+            with(sharedPref.edit()) {
+                putString("nama", nama)
+                putString("email", email)
+                putString("phone", phone)
+                putString("gender", gender)
+                apply()
+            }
 
-        val userMap = hashMapOf<String, Any>(
-            "nama" to nama,
-            "gender" to gender,
-            "email" to email,
-            "phone" to phone
-        )
+            val imagePath = sharedPref.getString("profileImage", "")
 
-        // Selalu sertakan profileImageUrl jika ada
-        if (!imagePath.isNullOrEmpty()) {
-            userMap["profileImageUrl"] = imagePath
-        }
+            val userMap = hashMapOf(
+                "nama" to nama,
+                "gender" to gender,
+                "email" to email,
+                "phone" to phone,
+                "updatedAt" to com.google.firebase.Timestamp.now(),
+                "imagePath" to imagePath
+            )
 
-        db.collection("users").document(uid)
-            .set(userMap, SetOptions.merge())
-            .addOnSuccessListener {
-                // Update SharedPreferences
-                with(sharedPref.edit()) {
-                    putString("nama", nama)
-                    putString("email", email)
-                    putString("phone", phone)
-                    putString("gender", gender)
-                    if (!imagePath.isNullOrEmpty()) {
-                        putString("profileImageUrl", imagePath)
-                    }
-                    apply()
+
+            db.collection("users").document(uid)
+                .update(userMap as Map<String, Any>)
+                .addOnSuccessListener {
+                    Toast.makeText(requireContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
+                    parentFragmentManager.beginTransaction()
+                        .replace(R.id.frame_container, AkunFragment())
+                        .addToBackStack(null)
+                        .commit()
+
                 }
-
-                Toast.makeText(requireContext(), "Profil berhasil diperbarui", Toast.LENGTH_SHORT).show()
-                requireActivity().onBackPressed()
-            }
-            .addOnFailureListener {
-                Toast.makeText(requireContext(), "Gagal memperbarui profil", Toast.LENGTH_SHORT).show()
-            }
+                .addOnFailureListener { exception ->
+                    Toast.makeText(requireContext(), "Gagal memperbarui profil: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
     }
 
-    private fun saveImageToInternalStorage(uri: Uri): String? {
-        return try {
-            val inputStream = requireContext().contentResolver.openInputStream(uri)
+    private fun saveImageToSharedPreferences(imageUri: Uri) {
+        try {
+            val inputStream = requireContext().contentResolver.openInputStream(imageUri)
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            val filename = "profile_${System.currentTimeMillis()}.jpg"
-            val file = File(requireContext().filesDir, filename)
+            val resized = resizeBitmap(bitmap, 400, 400)
 
-            val outputStream = FileOutputStream(file)
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream)
+            // Simpan ke internal storage
+            val directory = File(requireContext().filesDir, "profile")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            // Hapus file lama jika ada
+            val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+            val oldPath = sharedPref.getString("profileImage", null)
+            oldPath?.let {
+                val oldFile = File(it)
+                if (oldFile.exists()) {
+                    oldFile.delete()
+                }
+            }
+
+            // Buat nama file baru yang unik
+            val fileName = "profile_avatar_${System.currentTimeMillis()}.jpg"
+            val imageFile = File(directory, fileName)
+            val outputStream = FileOutputStream(imageFile)
+            resized.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
             outputStream.flush()
             outputStream.close()
 
-            file.absolutePath
+            // Simpan path ke SharedPreferences
+            with(sharedPref.edit()) {
+                putString("profileImage", imageFile.absolutePath)
+                apply()
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
-            null
+            Toast.makeText(requireContext(), "Gagal menyimpan gambar", Toast.LENGTH_SHORT).show()
         }
+    }
+
+
+    private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+        val width = bitmap.width
+        val height = bitmap.height
+        val ratio = minOf(maxWidth.toFloat() / width, maxHeight.toFloat() / height)
+        val newWidth = (width * ratio).toInt()
+        val newHeight = (height * ratio).toInt()
+        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     }
 
     override fun onDestroyView() {

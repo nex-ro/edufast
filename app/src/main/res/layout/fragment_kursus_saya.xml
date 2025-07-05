@@ -9,19 +9,30 @@
     android:background="#FFFFFF"
     tools:context=".Kursus.KursusSayaFragment">
 
-    <!-- Judul dengan Background Gambar -->
-    <TextView
-        android:id="@+id/txtJudul"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Kursus Saya"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="16dp"
-        android:paddingVertical="20dp"
-        android:textColor="#FFFFFF"
-        android:background="@color/blue" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp">
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/ic_arrow_back"
+            android:layout_marginRight="12dp"
+            android:contentDescription="Back" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Jadwal kursus Saya"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black" />
+    </LinearLayout>
 
     <!-- Tab Container -->
     <LinearLayout
@@ -124,4 +135,46 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="16dp" />
+    <!-- Tambahkan layout ini di dalam fragment_kursus_saya.xml -->
+    <!-- Letakkan setelah RecyclerView -->
+
+    <!-- Empty State Layout -->
+    <LinearLayout
+        android:id="@+id/layoutEmptyState"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="32dp"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:layout_marginBottom="16dp"
+            android:src="@drawable/ic_empty_courses"
+            android:tint="@color/gray"
+            android:alpha="0.6" />
+
+        <TextView
+            android:id="@+id/txtEmptyMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:text="Tidak ada data kursus"
+            android:textColor="@color/gray"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Belum ada kursus yang terdaftar pada kategori ini"
+            android:textColor="@color/gray"
+            android:textSize="14sp"
+            android:textAlignment="center"
+            android:alpha="0.8" />
+
+    </LinearLayout>
 </LinearLayout>

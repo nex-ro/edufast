@@ -1,6 +1,8 @@
 package com.example.tampilansiswa.pelajaran
 
 import android.app.Activity
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
@@ -26,6 +28,8 @@ import com.google.firebase.Timestamp
 
 
 class CourseDetailFragment : Fragment() {
+    private lateinit var gambarBank: ImageView
+
     private var course: Course? = null
     private var paymentProofUri: Uri? = null
     private var paymentProofBitmap: Bitmap? = null
@@ -52,7 +56,7 @@ class CourseDetailFragment : Fragment() {
     private lateinit var btnSelectPaymentProof: Button
     private lateinit var btnFinishPayment: Button
     private var teacherName: String = ""
-
+    private lateinit var tv_course_detail_price :TextView
     private val db = FirebaseFirestore.getInstance()
 
     // Activity Result Launchers
@@ -110,7 +114,30 @@ class CourseDetailFragment : Fragment() {
         initializeViews(view)
         setupViews()
         loadPaymentMethodData()
+        val btnCopyRekening = view.findViewById<TextView>(R.id.salin)
+        btnCopyRekening.setOnClickListener {
+            val clipboard = requireContext().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText("Nomor Rekening", accountNumber)
+            clipboard.setPrimaryClip(clip)
+            Toast.makeText(requireContext(), "Nomor rekening disalin", Toast.LENGTH_SHORT).show()
+        }
+
+        view.findViewById<ImageView>(R.id.btn_back).setOnClickListener{
+            parentFragmentManager.popBackStack()
+        }
         return view
+    }
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun initializeViews(view: View) {
@@ -120,6 +147,7 @@ class CourseDetailFragment : Fragment() {
         tvLevel = view.findViewById(R.id.tv_course_detail_level)
         tvCourseType = view.findViewById(R.id.tv_course_detail_type)
         tvDuration = view.findViewById(R.id.tv_course_detail_duration)
+        tv_course_detail_price=view.findViewById(R.id.tv_course_detail_price)
         tvLocation = view.findViewById(R.id.tv_course_detail_location)
         tvDate = view.findViewById(R.id.tv_course_detail_date)
         tvStartTime = view.findViewById(R.id.tv_course_detail_start_time)
@@ -127,6 +155,7 @@ class CourseDetailFragment : Fragment() {
         tvDescription = view.findViewById(R.id.tv_course_detail_description)
         tvBankName = view.findViewById(R.id.tv_bank_name)
         tvAccountNumber = view.findViewById(R.id.tv_account_number)
+        gambarBank=view.findViewById(R.id.gambarBank)
         ivPaymentProof = view.findViewById(R.id.iv_payment_proof)
         btnSelectPaymentProof = view.findViewById(R.id.btn_select_payment_proof)
         btnFinishPayment = view.findViewById(R.id.btn_finish_payment)
@@ -144,6 +173,7 @@ class CourseDetailFragment : Fragment() {
             tvDate.text = "Tanggal: ${courseData.date}"
             tvStartTime.text = "Waktu mulai: ${courseData.startTime}"
             tvPrice.text = courseData.formattedPrice
+            tv_course_detail_price.text= courseData.formattedPrice
             tvDescription.text = courseData.description.ifEmpty {
                 "Tidak ada deskripsi tersedia untuk kursus ini."
             }
@@ -159,6 +189,8 @@ class CourseDetailFragment : Fragment() {
             btnFinishPayment.setOnClickListener {
                 handlePaymentSubmission(courseData)
             }
+
+
 
             // Initially disable finish button
             updateFinishButtonState()
@@ -205,6 +237,14 @@ class CourseDetailFragment : Fragment() {
                         // Update UI
                         tvBankName.text = bankName
                         tvAccountNumber.text = accountNumber
+                        val iconName = "ic_${bankName.lowercase()}" // Contoh: "bca" → "ic_bca"
+                        val resId = resources.getIdentifier(iconName, "drawable", requireContext().packageName)
+
+                        if (resId != 0) {
+                            gambarBank.setImageResource(resId)
+                        } else {
+                            gambarBank.setImageResource(R.drawable.ic_bri) // fallback icon
+                        }
 
                         loadTeacherData(courseData.uid)
                     } else {
@@ -237,32 +277,58 @@ class CourseDetailFragment : Fragment() {
     }
 
     private fun createNotification(course: Course, enrollmentId: String) {
-        val notificationId = UUID.randomUUID().toString()
         val timestamp = Timestamp.now()
+        val studentId = getCurrentUserId()
+        val teacherId = course.uid
 
-        // Data notifikasi untuk guru
-        val notificationData = hashMapOf(
-            "id" to notificationId,
-            "uid" to getCurrentUserId(),
+        // Notifikasi untuk Guru
+        val teacherNotificationId = UUID.randomUUID().toString()
+        val teacherNotification = hashMapOf(
+            "id" to teacherNotificationId,
+            "fromUid" to studentId,
+            "toUid" to teacherId,
             "enrollId" to enrollmentId,
             "judulPesan" to "Kelas berhasil dibooking",
-            "message" to "Pesanan terhadap kelas ${course.courseName} berhasil dibuat sedang menunggu penerimaan dari guru $teacherName",
+            "message" to "Seseorang telah membooking kelas ${course.courseName}. Silakan tinjau dan konfirmasi pesanan.",
             "createdAt" to timestamp,
             "isRead" to false,
             "type" to "enrollment"
         )
 
-        // Simpan notifikasi ke Firestore
+        // Notifikasi untuk Siswa
+        val studentNotificationId = UUID.randomUUID().toString()
+        val studentNotification = hashMapOf(
+            "id" to studentNotificationId,
+            "fromUid" to teacherId,
+            "toUid" to studentId,
+            "enrollId" to enrollmentId,
+            "judulPesan" to "Pesanan berhasil dibuat",
+            "message" to "Pesanan Anda untuk kelas ${course.courseName} berhasil dibuat. Menunggu konfirmasi dari guru $teacherName.",
+            "createdAt" to timestamp,
+            "isRead" to false,
+            "type" to "enrollment_confirmation"
+        )
+
+        // Kirim ke Firestore (untuk guru)
         db.collection("notifications")
-            .document(notificationId)
-            .set(notificationData)
+            .document(teacherNotificationId)
+            .set(teacherNotification)
             .addOnSuccessListener {
-                // Notifikasi berhasil disimpan
-                android.util.Log.d("Notification", "Notifikasi berhasil dibuat untuk guru: ${course.uid}")
+                android.util.Log.d("Notification", "Notifikasi untuk guru berhasil dikirim.")
             }
-            .addOnFailureListener { exception ->
-                // Log error jika gagal menyimpan notifikasi
-                android.util.Log.e("Notification", "Gagal membuat notifikasi: ${exception.message}")
+            .addOnFailureListener {
+                android.util.Log.e("Notification", "Gagal mengirim notifikasi ke guru: ${it.message}")
+            }
+
+        // Kirim ke Firestore (untuk siswa)
+        db.collection("notifications")
+            .document(studentNotificationId)
+            .set(studentNotification)
+            .addOnSuccessListener {
+                android.util.Log.d("Notification", "Notifikasi untuk siswa berhasil dikirim.")
+            }
+            .addOnFailureListener {
+                android.util.Log.e("Notification", "Gagal mengirim notifikasi ke siswa: ${it.message}")
             }
     }
 
@@ -386,34 +452,7 @@ class CourseDetailFragment : Fragment() {
         }
     }
 
-    private fun createStudentNotification(course: Course, enrollmentId: String) {
-        val currentUserId = getCurrentUserId()
-        val notificationId = UUID.randomUUID().toString()
-        val timestamp = Timestamp.now()
 
-        // Data notifikasi untuk siswa
-        val studentNotificationData = hashMapOf(
-            "id" to notificationId,
-            "uid" to currentUserId, // ID siswa yang akan menerima notifikasi
-            "enrollId" to enrollmentId,
-            "judulPesan" to "Pesanan berhasil dibuat",
-            "message" to "Pesanan Anda untuk kelas ${course.courseName} berhasil dibuat. Menunggu konfirmasi dari guru $teacherName",
-            "createdAt" to timestamp,
-            "isRead" to false,
-            "type" to "enrollment_confirmation"
-        )
-
-        // Simpan notifikasi siswa ke Firestore
-        db.collection("notifications")
-            .document(notificationId)
-            .set(studentNotificationData)
-            .addOnSuccessListener {
-                android.util.Log.d("Notification", "Notifikasi siswa berhasil dibuat")
-            }
-            .addOnFailureListener { exception ->
-                android.util.Log.e("Notification", "Gagal membuat notifikasi siswa: ${exception.message}")
-            }
-    }
     private fun saveEnrollmentAndOrderData(course: Course, paymentProofPath: String) {
         val currentUserId = getCurrentUserId()
         val orderId = UUID.randomUUID().toString()

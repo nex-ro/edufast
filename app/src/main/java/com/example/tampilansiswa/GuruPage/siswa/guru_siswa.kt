@@ -13,6 +13,16 @@ import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentGuruSiswaBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.Button
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestListener
+import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.load.DataSource
+import com.bumptech.glide.load.engine.GlideException
+import android.graphics.drawable.Drawable
+import com.example.tampilansiswa.GuruPage.Dashboard_guru
 
 class guru_siswa : Fragment() {
     private var currentTeacherId: String = ""
@@ -20,19 +30,18 @@ class guru_siswa : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: CourseAdapter
     private lateinit var db: FirebaseFirestore
+    private var overlayView: View? = null
+
 
     private val allCourses = mutableListOf<enrollments>()
     private val userMap = mutableMapOf<String, users>()
     private var currentFilter = "pending"
-
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentGuruSiswaBinding.inflate(inflater, container, false)
 
         db = FirebaseFirestore.getInstance()
-
-        // Ambil teacherId dari SharedPreferences dengan penanganan error
         try {
             val sharedPref = requireActivity().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
             currentTeacherId = sharedPref.getString("uid", "") ?: ""
@@ -45,15 +54,30 @@ class guru_siswa : Fragment() {
             Toast.makeText(context, "Error mengambil session: ${e.message}", Toast.LENGTH_SHORT).show()
             return binding.root
         }
+        initializeTeacherStudentCount()
 
         setupRecyclerView()
         setupTabListeners()
         loadData()
-
+        requireActivity().window.navigationBarColor = ContextCompat.getColor(requireContext(), R.color.white)
+        binding.btnBack.setOnClickListener{
+            navigateToFragment(Dashboard_guru())
+        }
         return binding.root
     }
 
-
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
+        }
+    }
     private fun setupRecyclerView() {
         adapter = CourseAdapter(emptyList(), emptyMap()) { course, action ->
             handleButtonClick(course, action)
@@ -92,8 +116,38 @@ class guru_siswa : Fragment() {
     }
 
     private fun loadData() {
+        binding.shimmerLayout.startShimmer() // <-- ini penting
+        binding.shimmerLayout.visibility = View.VISIBLE
+        binding.rvKursus.visibility = View.GONE
+
         loadCourses()
     }
+    private fun initializeTeacherStudentCount() {
+        if (currentTeacherId.isEmpty()) return
+
+        db.collection("users").document(currentTeacherId)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    val siswaField = document.get("siswa")
+                    if (siswaField == null) {
+                        // Field siswa belum ada, inisialisasi dengan 0
+                        db.collection("users").document(currentTeacherId)
+                            .update("siswa", 0)
+                            .addOnSuccessListener {
+                                Toast.makeText(context, "Field siswa berhasil diinisialisasi", Toast.LENGTH_SHORT).show()
+                            }
+                            .addOnFailureListener { e ->
+                                Toast.makeText(context, "Error inisialisasi field siswa: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
+                    }
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Error checking teacher document: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
 
     private fun loadCourses() {
         // Pastikan teacherId tersedia
@@ -101,9 +155,6 @@ class guru_siswa : Fragment() {
             Toast.makeText(context, "Teacher ID tidak ditemukan", Toast.LENGTH_SHORT).show()
             return
         }
-
-        Toast.makeText(context, "Loading data untuk teacher: $currentTeacherId", Toast.LENGTH_SHORT).show()
-
         try {
             db.collection("enrollments")
                 .whereEqualTo("teacherId", currentTeacherId)
@@ -166,10 +217,12 @@ class guru_siswa : Fragment() {
         } catch (e: Exception) {
             Toast.makeText(context, "Error setting up listener: ${e.message}", Toast.LENGTH_SHORT).show()
         }
+
     }
 
     private fun loadUsers() {
         if (allCourses.isEmpty()) {
+            stopShimmerAndShowData()
             filterAndShowCourses()
             return
         }
@@ -182,16 +235,46 @@ class guru_siswa : Fragment() {
             .addOnSuccessListener { snapshot ->
                 userMap.clear()
                 for (doc in snapshot.documents) {
-                    val user = doc.toObject(users::class.java)
-                    user?.let { userMap[it.uid] = it }
+                    try {
+                        // Manual parsing untuk memastikan semua field termuat
+                        val data = doc.data
+                        if (data != null) {
+                            val user = users(
+                                uid = data["uid"] as? String ?: "",
+                                nama = data["nama"] as? String ?: "",
+                                email = data["email"] as? String ?: "",
+                                phone = data["phone"] as? String ?: "",
+                                role = data["role"] as? String ?: "",
+                                profilePath = data["profileImageUrl"] as? String ?: "",
+                                imagePath = data["imagePath"] as? String ?: "",
+                                gender = data["gender"] as? String ?: "",
+                                isActive = data["isActive"] as? Boolean ?: true,
+                                createdAt = (data["createdAt"] as? Number)?.toLong() ?: 0L,
+                                updatedAt = (data["updatedAt"] as? com.google.firebase.Timestamp)?.toDate()?.time ?: 0L
+                            )
+                            userMap[user.uid] = user
+                        }
+                    } catch (e: Exception) {
+                        // Fallback ke parsing otomatis
+                        val user = doc.toObject(users::class.java)
+                        user?.let { userMap[it.uid] = it }
+                    }
                 }
+                stopShimmerAndShowData()
                 filterAndShowCourses()
             }
             .addOnFailureListener { e ->
                 Toast.makeText(context, "Error loading users: ${e.message}", Toast.LENGTH_SHORT).show()
+                stopShimmerAndShowData()
                 filterAndShowCourses()
             }
     }
+    private fun stopShimmerAndShowData() {
+        binding.shimmerLayout.stopShimmer()
+        binding.shimmerLayout.visibility = View.GONE
+        binding.rvKursus.visibility = View.VISIBLE
+    }
+
 
     private fun filterAndShowCourses() {
         val filteredCourses = when (currentFilter) {
@@ -204,6 +287,7 @@ class guru_siswa : Fragment() {
 
         adapter.updateData(filteredCourses, userMap)
     }
+
 
     private fun updateTabUI(selectedTab: String) {
         val blue = ContextCompat.getColor(requireContext(), R.color.blue)
@@ -244,9 +328,7 @@ class guru_siswa : Fragment() {
     private fun handleButtonClick(course: enrollments, action: String) {
         when (action) {
             "view_proof" -> {
-                // Implementasi untuk melihat bukti pembayaran
-                Toast.makeText(context, "Melihat bukti pembayaran", Toast.LENGTH_SHORT).show()
-                // Buka activity/fragment untuk melihat bukti pembayaran
+                showPaymentProofOverlay(course.paymentProofPath)
             }
             "accept" -> {
                 // Update status ke "upcoming"
@@ -257,9 +339,7 @@ class guru_siswa : Fragment() {
                 updateCourseStatus(course, "cancel")
             }
             "reschedule" -> {
-                // Implementasi untuk mengubah jadwal
                 Toast.makeText(context, "Mengubah jadwal", Toast.LENGTH_SHORT).show()
-                // Buka dialog/activity untuk mengubah jadwal
             }
             "complete" -> {
                 // Update status ke "selesai"
@@ -267,7 +347,74 @@ class guru_siswa : Fragment() {
             }
         }
     }
+    private fun showPaymentProofOverlay(paymentProofPath: String) {
+        if (paymentProofPath.isEmpty()) {
+            Toast.makeText(context, "Bukti pembayaran tidak tersedia", Toast.LENGTH_SHORT).show()
+            return
+        }
 
+        val overlayLayout = LayoutInflater.from(requireContext()).inflate(R.layout.overlay_payment_proof, null)
+
+        val imageView = overlayLayout.findViewById<ImageView>(R.id.imgPaymentProof)
+        val btnClose = overlayLayout.findViewById<Button>(R.id.btnCloseOverlay)
+        val progressBar = overlayLayout.findViewById<ProgressBar>(R.id.progressBarImage)
+
+        // Show progress bar
+        progressBar.visibility = View.VISIBLE
+
+        Glide.with(requireContext())
+            .load(paymentProofPath)
+            .placeholder(R.drawable.ic_visibility)
+            .error(R.drawable.ic_empty_courses)
+            .into(imageView)
+
+        imageView.postDelayed({
+            progressBar.visibility = View.GONE
+        }, 2000)
+
+        btnClose.setOnClickListener {
+            hidePaymentProofOverlay()
+        }
+
+        // Set click listener untuk overlay background (tutup ketika diklik di luar gambar)
+        overlayLayout.setOnClickListener {
+            hidePaymentProofOverlay()
+        }
+
+        // Jangan tutup overlay ketika gambar diklik
+        imageView.setOnClickListener {
+            // Do nothing, prevent overlay from closing
+        }
+
+        // Tambahkan overlay ke parent view
+        val parentView = requireActivity().findViewById<ViewGroup>(android.R.id.content)
+        parentView.addView(overlayLayout)
+
+        overlayView = overlayLayout
+
+        // Animasi fade in
+        overlayLayout.alpha = 0f
+        overlayLayout.animate()
+            .alpha(1f)
+            .setDuration(300)
+            .start()
+    }
+
+    private fun hidePaymentProofOverlay() {
+        overlayView?.let { overlay ->
+            // Animasi fade out
+            overlay.animate()
+                .alpha(0f)
+                .setDuration(300)
+                .withEndAction {
+                    // Hapus overlay dari parent view
+                    val parentView = requireActivity().findViewById<ViewGroup>(android.R.id.content)
+                    parentView.removeView(overlay)
+                    overlayView = null
+                }
+                .start()
+        }
+    }
     private fun updateCourseStatus(course: enrollments, newStatus: String) {
         if (course.id.isEmpty()) {
             Toast.makeText(context, "Course ID tidak valid", Toast.LENGTH_SHORT).show()

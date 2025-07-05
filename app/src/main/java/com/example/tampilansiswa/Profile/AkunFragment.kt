@@ -7,14 +7,22 @@ import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Base64
 import android.util.Log
+import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import android.widget.Switch
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatDelegate
+import com.example.tampilansiswa.GuruPage.profil.Password
 import com.example.tampilansiswa.Onboarding.OnboardingActivity
-import com.example.tampilansiswa.databinding.FragmentAkunBinding
-import com.google.firebase.auth.FirebaseAuth
+import com.example.tampilansiswa.Profile.EditProfile
+import com.example.tampilansiswa.Profile.EditProfileActivity
 import com.example.tampilansiswa.R
+import com.example.tampilansiswa.databinding.FragmentAkunBinding
+import com.example.tampilansiswa.databinding.FragmentGuruProfilBinding
+import com.google.firebase.auth.FirebaseAuth
+import java.io.File
 
 class AkunFragment : Fragment() {
 
@@ -23,13 +31,13 @@ class AkunFragment : Fragment() {
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 
     companion object {
-        private const val TAG = "AkunFragment"
+        private const val TAG = "guru_profil"
     }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View? {
         _binding = FragmentAkunBinding.inflate(inflater, container, false)
 
         setupClickListeners()
@@ -38,28 +46,41 @@ class AkunFragment : Fragment() {
         return binding.root
     }
 
-    override fun onResume() {
-        super.onResume()
-        // Refresh data setiap kali fragment terlihat (misalnya setelah edit profile)
-        loadUserFromPreferences()
-    }
-
     private fun setupClickListeners() {
-        // Tombol edit profile
+        // Edit Profile di header
         binding.btnEdit.setOnClickListener {
-            val intent = Intent(requireContext(), EditProfileActivity::class.java)
-            startActivity(intent)
+            navigateToFragment(EditProfile())
         }
 
-        // Tombol Logout
+        binding.itemEditProfile.setOnClickListener {
+            navigateToFragment(EditProfile())
+        }
+
+        binding.imgProfile.setOnClickListener {
+            navigateToFragment(EditProfile())
+        }
+
+        // Mengatur Password
+        binding.itemChangePassword.setOnClickListener {
+            navigateToFragment(Password())
+        }
+
+
         binding.itemLogout.setOnClickListener {
             performLogout()
         }
+    }
 
-        // Profile image click - bisa untuk quick edit atau view
-        binding.imgProfile.setOnClickListener {
-            val intent = Intent(requireContext(), EditProfileActivity::class.java)
-            startActivity(intent)
+    private fun saveDarkModePreference(isDarkMode: Boolean) {
+        val sharedPref = requireContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
+        sharedPref.edit().putBoolean("dark_mode", isDarkMode).apply()
+    }
+
+    private fun applyDarkMode(isDarkMode: Boolean) {
+        if (isDarkMode) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
     }
 
@@ -68,15 +89,17 @@ class AkunFragment : Fragment() {
             // Sign out dari Firebase
             auth.signOut()
 
-            // Clear SharedPreferences
-            val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
-            val editor = sharedPref.edit()
-            editor.clear()
-            editor.apply()
+            // Clear shared preferences
+            val userSession = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+            userSession.edit().clear().apply()
 
-            Log.d(TAG, "User logged out successfully")
+            // Clear app settings jika diperlukan (opsional)
+            // val appSettings = requireContext().getSharedPreferences("AppSettings", Context.MODE_PRIVATE)
+            // appSettings.edit().clear().apply()
 
-            // Navigate ke OnboardingActivity
+            Log.d(TAG, "Guru logged out successfully")
+
+            // Redirect ke OnboardingActivity
             val intent = Intent(requireContext(), OnboardingActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
@@ -85,7 +108,13 @@ class AkunFragment : Fragment() {
             activity?.finish()
         } catch (e: Exception) {
             Log.e(TAG, "Error during logout: ${e.message}")
+            Toast.makeText(requireContext(), "Terjadi kesalahan saat logout", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadUserFromPreferences()
     }
 
     private fun loadUserFromPreferences() {
@@ -96,7 +125,7 @@ class AkunFragment : Fragment() {
             val nama = sharedPref.getString("nama", "Nama tidak tersedia")
             val email = sharedPref.getString("email", "Email tidak tersedia")
             val phone = sharedPref.getString("phone", "No. HP tidak tersedia")
-            val role = sharedPref.getString("role", "User")
+            val role = sharedPref.getString("role", "Guru")
 
             // Set text data
             binding.txtNama.text = nama
@@ -106,41 +135,32 @@ class AkunFragment : Fragment() {
             // Load profile image
             loadProfileImage(sharedPref)
 
-            Log.d(TAG, "User data loaded successfully - Name: $nama, Email: $email")
+            Log.d(TAG, "Guru data loaded successfully - Name: $nama, Email: $email")
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading user data: ${e.message}")
+            Log.e(TAG, "Error loading guru data: ${e.message}")
             setDefaultValues()
         }
     }
 
     private fun loadProfileImage(sharedPref: android.content.SharedPreferences) {
-        val base64Image = sharedPref.getString("profileImage", null)
+        val imagePath = sharedPref.getString("profileImage", null)
 
-        if (!base64Image.isNullOrEmpty()) {
-            try {
-                // Decode Base64 string ke byte array
-                val byteArray = Base64.decode(base64Image, Base64.DEFAULT)
-
-                // Convert byte array ke bitmap
-                val bitmap = BitmapFactory.decodeByteArray(byteArray, 0, byteArray.size)
-
-                if (bitmap != null) {
-                    // Set bitmap ke ImageView
-                    binding.imgProfile.setImageBitmap(bitmap)
-                    Log.d(TAG, "Profile image loaded successfully")
-                } else {
-                    Log.w(TAG, "Failed to decode bitmap from Base64")
-                    setDefaultProfileImage()
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Error decoding profile image: ${e.message}")
+        if (!imagePath.isNullOrEmpty()) {
+            val file = java.io.File(imagePath)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                binding.imgProfile.setImageBitmap(bitmap)
+                Log.d(TAG, "Profile image loaded from local file")
+            } else {
+                Log.w(TAG, "Profile image file not found, using default")
                 setDefaultProfileImage()
             }
         } else {
-            Log.d(TAG, "No profile image found, using default")
+            Log.d(TAG, "No profile image path found, using default")
             setDefaultProfileImage()
         }
     }
+
 
     private fun setDefaultProfileImage() {
         binding.imgProfile.setImageResource(R.drawable.avatar1)
@@ -156,5 +176,12 @@ class AkunFragment : Fragment() {
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
+    }
+    private fun navigateToFragment(fragment: Fragment) {
+        requireActivity()
+            .supportFragmentManager
+            .beginTransaction()
+            .replace(R.id.frame_container, fragment)
+            .commit()
     }
 }

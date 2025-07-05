@@ -112,32 +112,7 @@ class PemesananActivity : AppCompatActivity() {
         }
 
         // Jika user klik “Buat Pesanan”
-        btnPesan.setOnClickListener {
-            val gender = when {
-                rbMale.isChecked -> "Laki-laki"
-                rbFemale.isChecked -> "Perempuan"
-                else -> "-"
-            }
 
-            val metodeBayar = when {
-                rbDana.isChecked -> rbDana.text.toString()
-                rbBNI.isChecked  -> rbBNI.text.toString()
-                rbBRI.isChecked  -> rbBRI.text.toString()
-                else -> "-"
-            }
-
-            val total = subtotalGuru + biayaLayanan
-
-            Intent(this, DetailPembayaranActivity::class.java).apply {
-                putExtra("gender", gender)
-                putExtra("metode", metodeBayar)
-                putExtra("program", selectedProgram)
-                putExtra("tanggal", selectedTanggal)
-                putExtra("jam", selectedJam)
-                putExtra("total", total)
-                startActivity(this)
-            }
-        }
     }
 
     private fun updateTotal() {

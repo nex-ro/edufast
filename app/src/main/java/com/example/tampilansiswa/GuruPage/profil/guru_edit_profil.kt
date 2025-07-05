@@ -14,13 +14,15 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import com.example.tampilansiswa.GuruPage.Dashboard_guru
 import com.example.tampilansiswa.R
 import com.example.tampilansiswa.databinding.FragmentEditProfileBinding
 import com.example.tampilansiswa.databinding.FragmentGuruEditProfilBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.IOException
-
+import java.io.File          // ⬅️ Tambahkan ini
+import java.io.FileOutputStream
 class guru_edit_profil : Fragment() {
 
     private var _binding: FragmentGuruEditProfilBinding? = null
@@ -51,10 +53,23 @@ class guru_edit_profil : Fragment() {
         setupSpinners()
         setupClickListeners()
         loadUserData(auth.currentUser?.uid)
-
+        binding.btnBack.setOnClickListener{
+            navigateToFragment(guru_profil())
+        }
         return binding.root
     }
-
+    private fun navigateToFragment(fragment: Fragment) {
+        try {
+            requireActivity()
+                .supportFragmentManager
+                .beginTransaction()
+                .replace(R.id.frame_container, fragment)
+                .addToBackStack(null)
+                .commit()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error navigating to page", Toast.LENGTH_SHORT).show()
+        }
+    }
     private fun setupSpinners() {
         // Setup Gender Spinner
         val genderAdapter = ArrayAdapter.createFromResource(
@@ -70,7 +85,7 @@ class guru_edit_profil : Fragment() {
     private fun setupClickListeners() {
         binding.btnBack.setOnClickListener {
             parentFragmentManager.beginTransaction()
-                .replace(R.id.frame_container, guru_profil()) // ganti R.id.fragment_container dengan ID container fragment kamu
+                .replace(R.id.frame_container, guru_profil())
                 .addToBackStack(null)
                 .commit()
 
@@ -100,9 +115,11 @@ class guru_edit_profil : Fragment() {
         binding.etEmail.setText(sharedPref.getString("email", ""))
         binding.etPhone.setText(sharedPref.getString("phone", ""))
         binding.etBio.setText(sharedPref.getString("bio", ""))
+        binding.etsubjek.setText(sharedPref.getString("subjek", ""))
+        binding.etDomisili.setText(sharedPref.getString("domisili", ""))
 
-        val imageBase64 = sharedPref.getString("profileImage", null)
-        loadImageFromBase64(imageBase64)
+        val path = sharedPref.getString("profileImage", null)
+        loadImageFromLocalPath(path)
 
         uid?.let {
             db.collection("users").document(uid).get()
@@ -112,6 +129,9 @@ class guru_edit_profil : Fragment() {
                         binding.etEmail.setText(document.getString("email"))
                         binding.etPhone.setText(document.getString("phone"))
                         binding.etBio.setText(document.getString("bio"))
+                        binding.etsubjek.setText(document.getString("subjek"))
+                        binding.etDomisili.setText(document.getString("domisili"))
+
                         val education = document.getString("education")
                         binding.etEducation.setText(education)
 
@@ -130,24 +150,30 @@ class guru_edit_profil : Fragment() {
         }
     }
 
-    private fun loadImageFromBase64(imageBase64: String?) {
-        imageBase64?.let { base64String ->
-            try {
-                val decodedBytes = android.util.Base64.decode(base64String, android.util.Base64.DEFAULT)
-                val bitmap = BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    private fun loadImageFromLocalPath(path: String?) {
+        if (!path.isNullOrEmpty()) {
+            val file = File(path)
+            if (file.exists()) {
+                val bitmap = BitmapFactory.decodeFile(file.absolutePath)
+                binding.ivAvatar.setImageBitmap(null) // clear cache
                 binding.ivAvatar.setImageBitmap(bitmap)
-            } catch (e: Exception) {
-                e.printStackTrace()
+            } else {
                 binding.ivAvatar.setImageResource(R.drawable.avatar1)
             }
+        } else {
+            binding.ivAvatar.setImageResource(R.drawable.avatar1)
         }
     }
+
 
     private fun saveProfile() {
         val nama = binding.etNama.text.toString().trim()
         val gender = binding.spinnerGender.selectedItem.toString()
         val education = binding.etEducation.text.toString().trim()
         val bio = binding.etBio.text.toString().trim()
+        val domisili = binding.etDomisili.text.toString().trim()
+        val subjek = binding.etsubjek.text.toString().trim()
+
         val email = binding.etEmail.text.toString().trim()
         val phone = binding.etPhone.text.toString().trim()
 
@@ -176,6 +202,14 @@ class guru_edit_profil : Fragment() {
             binding.etBio.error = "Bio tidak boleh kosong"
             return
         }
+        if (domisili.isEmpty()) {
+            binding.etDomisili.error = "Domisili tidak boleh kosong"
+            return
+        }
+        if (subjek.isEmpty()) {
+            binding.etsubjek.error = "Subjek tidak boleh kosong"
+            return
+        }
         if (bio.length < 20) {
             binding.etBio.error = "Bio minimal 20 karakter"
             return
@@ -186,7 +220,8 @@ class guru_edit_profil : Fragment() {
         }
 
 
-        val uid = auth.currentUser?.uid
+        val sharedPref = requireContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
+        val uid = sharedPref.getString("uid", "") ?: ""
         if (uid != null) {
             selectedImageUri?.let { uri ->
                 saveImageToSharedPreferences(uri)
@@ -200,19 +235,27 @@ class guru_edit_profil : Fragment() {
                 putString("gender", gender)
                 putString("education", education)
                 putString("bio", bio)
+                putString("domisili", domisili)
+                putString("subjek", subjek)
+
                 apply()
             }
 
-            // Simpan ke Firestore
+            val imagePath = sharedPref.getString("profileImage", "")
+
             val userMap = hashMapOf(
                 "nama" to nama,
                 "gender" to gender,
                 "education" to education,
                 "bio" to bio,
+                "domisili" to domisili,
+                "subjek" to subjek,
                 "email" to email,
                 "phone" to phone,
-                "updatedAt" to com.google.firebase.Timestamp.now()
+                "updatedAt" to com.google.firebase.Timestamp.now(),
+                "imagePath" to imagePath
             )
+
 
             db.collection("users").document(uid)
                 .update(userMap as Map<String, Any>)
@@ -236,22 +279,45 @@ class guru_edit_profil : Fragment() {
             val bitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            val resizedBitmap = resizeBitmap(bitmap, 200, 200)
-            val byteArrayOutputStream = java.io.ByteArrayOutputStream()
-            resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream)
-            val byteArray = byteArrayOutputStream.toByteArray()
-            val base64String = android.util.Base64.encodeToString(byteArray, android.util.Base64.DEFAULT)
+            val resized = resizeBitmap(bitmap, 400, 400)
 
+            // Simpan ke internal storage
+            val directory = File(requireContext().filesDir, "profile")
+            if (!directory.exists()) {
+                directory.mkdirs()
+            }
+
+            // Hapus file lama jika ada
             val sharedPref = requireContext().getSharedPreferences("UserSession", Context.MODE_PRIVATE)
+            val oldPath = sharedPref.getString("profileImage", null)
+            oldPath?.let {
+                val oldFile = File(it)
+                if (oldFile.exists()) {
+                    oldFile.delete()
+                }
+            }
+
+            // Buat nama file baru yang unik
+            val fileName = "profile_avatar_${System.currentTimeMillis()}.jpg"
+            val imageFile = File(directory, fileName)
+            val outputStream = FileOutputStream(imageFile)
+            resized.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
+            outputStream.flush()
+            outputStream.close()
+
+            // Simpan path ke SharedPreferences
             with(sharedPref.edit()) {
-                putString("profileImage", base64String)
+                putString("profileImage", imageFile.absolutePath)
                 apply()
             }
-        } catch (e: IOException) {
+
+        } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(requireContext(), "Gagal menyimpan gambar", Toast.LENGTH_SHORT).show()
         }
     }
+
+
 
     private fun resizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
         val width = bitmap.width

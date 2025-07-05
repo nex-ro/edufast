@@ -5,10 +5,10 @@ import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.text.InputType
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -25,10 +25,8 @@ class SignUpActivity : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var selectedRole = ""
-
-    companion object {
-        private const val TAG = "SignUpActivity"
-    }
+    private var isPasswordVisible = false
+    private var isConfirmPasswordVisible = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,29 +45,51 @@ class SignUpActivity : AppCompatActivity() {
             val password = binding.etPassword.text.toString().trim()
             val confirmPassword = binding.etConfirmPassword.text.toString().trim()
 
-            if (name.isEmpty() || phone.isEmpty() || email.isEmpty() ||
-                password.isEmpty() || confirmPassword.isEmpty()
-            ) {
+            if (name.isEmpty() || phone.isEmpty() || email.isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
+                showError("Semua field harus diisi")
                 Toast.makeText(this, "Semua field harus diisi", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (selectedRole.isEmpty() || selectedRole == "Pilih Role") {
+                showError("Silakan pilih role")
                 Toast.makeText(this, "Silakan pilih role", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (password != confirmPassword) {
+                showError("Password tidak cocok")
                 Toast.makeText(this, "Password tidak cocok", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             if (password.length < 6) {
+                showError("Password minimal 6 karakter")
                 Toast.makeText(this, "Password minimal 6 karakter", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
             registerUser(name, phone, email, password, selectedRole)
+        }
+
+        binding.ivTogglePassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            binding.etPassword.inputType =
+                if (isPasswordVisible)
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                else
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            binding.etPassword.setSelection(binding.etPassword.text.length)
+        }
+
+        binding.ivToggleConfirmPassword.setOnClickListener {
+            isConfirmPasswordVisible = !isConfirmPasswordVisible
+            binding.etConfirmPassword.inputType =
+                if (isConfirmPasswordVisible)
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+                else
+                    InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            binding.etConfirmPassword.setSelection(binding.etConfirmPassword.text.length)
         }
 
         binding.txtSignIn.setOnClickListener {
@@ -78,6 +98,18 @@ class SignUpActivity : AppCompatActivity() {
 
         binding.btnBack.setOnClickListener {
             finish()
+        }
+
+        listOf(
+            binding.etName,
+            binding.etPhone,
+            binding.etEmail,
+            binding.etPassword,
+            binding.etConfirmPassword
+        ).forEach {
+            it.setOnFocusChangeListener { _, _ ->
+                binding.tvErrorMessage.visibility = View.GONE
+            }
         }
     }
 
@@ -99,8 +131,11 @@ class SignUpActivity : AppCompatActivity() {
     }
 
     private fun registerUser(name: String, phone: String, email: String, password: String, role: String) {
+        showLoading()
+
         auth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener { task ->
+                hideLoading()
                 if (task.isSuccessful) {
                     val uid = auth.currentUser?.uid ?: ""
                     val createdAt = System.currentTimeMillis()
@@ -112,7 +147,6 @@ class SignUpActivity : AppCompatActivity() {
                         "role" to role.lowercase(),
                         "createdAt" to createdAt,
                         "isActive" to true,
-                        "profileImage" to createDefaultProfileImageBase64()
                     )
 
                     val collection = when (role.lowercase()) {
@@ -125,17 +159,19 @@ class SignUpActivity : AppCompatActivity() {
                         .addOnSuccessListener {
                             db.collection(collection).document(uid).set(user)
                                 .addOnSuccessListener {
-                                    saveUserToPreferences(email, name, phone, role, true, createdAt, user["profileImage"] as String)
+                                    saveUserToPreferences(email, name, phone, role, true, createdAt)
                                     Toast.makeText(this, "Registrasi berhasil sebagai $role", Toast.LENGTH_SHORT).show()
                                     startActivity(Intent(this, MainActivity::class.java))
                                     finish()
                                 }
-                                .addOnFailureListener { e ->
-                                    Toast.makeText(this, "Gagal menyimpan data role: ${e.message}", Toast.LENGTH_SHORT).show()
+                                .addOnFailureListener {
+                                    showError("Gagal menyimpan data role")
+                                    Toast.makeText(this, "Gagal menyimpan data role", Toast.LENGTH_SHORT).show()
                                 }
                         }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(this, "Gagal menyimpan ke Firestore: ${e.message}", Toast.LENGTH_SHORT).show()
+                        .addOnFailureListener {
+                            showError("Gagal menyimpan ke Firestore")
+                            Toast.makeText(this, "Gagal menyimpan ke Firestore", Toast.LENGTH_SHORT).show()
                         }
                 } else {
                     val errorMessage = when {
@@ -147,7 +183,8 @@ class SignUpActivity : AppCompatActivity() {
                             "Format email tidak valid"
                         else -> "Gagal: ${task.exception?.message}"
                     }
-                    Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+                    showError(errorMessage)
+                    Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show()
                 }
             }
     }
@@ -159,7 +196,6 @@ class SignUpActivity : AppCompatActivity() {
         role: String,
         isActive: Boolean,
         createdAt: Long,
-        profileImage: String?
     ) {
         val sharedPref = getSharedPreferences("UserSession", MODE_PRIVATE)
         val editor = sharedPref.edit()
@@ -169,12 +205,9 @@ class SignUpActivity : AppCompatActivity() {
         editor.putBoolean("isActive", isActive)
         editor.putString("nama", nama)
         editor.putString("phone", phone)
-        editor.putString("role", role)
+        editor.putString("role", role.lowercase())
         editor.putString("uid", auth.currentUser?.uid ?: "")
-        editor.putString("profileImage", profileImage ?: "")
-
         editor.apply()
-        Log.d(TAG, "User data saved to preferences successfully")
     }
 
     private fun createDefaultProfileImageBase64(): String {
@@ -187,8 +220,24 @@ class SignUpActivity : AppCompatActivity() {
             val byteArray = byteArrayOutputStream.toByteArray()
             Base64.encodeToString(byteArray, Base64.DEFAULT)
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating default profile image: ${e.message}")
             ""
         }
+    }
+
+    private fun showError(message: String) {
+        binding.tvErrorMessage.apply {
+            text = message
+            visibility = View.VISIBLE
+        }
+    }
+
+    private fun showLoading() {
+        binding.progressOverlay.visibility = View.VISIBLE
+        binding.btnSignUp.isEnabled = false
+    }
+
+    private fun hideLoading() {
+        binding.progressOverlay.visibility = View.GONE
+        binding.btnSignUp.isEnabled = true
     }
 }

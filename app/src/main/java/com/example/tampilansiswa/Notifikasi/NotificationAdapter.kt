@@ -7,6 +7,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tampilansiswa.R
+import android.net.Uri
+import java.io.File
 
 class NotificationAdapter(
     private val notifications: List<NotificationModel>,
@@ -27,6 +29,7 @@ class NotificationAdapter(
         return NotificationViewHolder(view)
     }
 
+    // Di NotificationAdapter.onBindViewHolder(), update icon logic
     override fun onBindViewHolder(holder: NotificationViewHolder, position: Int) {
         val notification = notifications[position]
 
@@ -38,27 +41,29 @@ class NotificationAdapter(
         when (notification.type) {
             "enrollment" -> holder.imageView.setImageResource(R.drawable.ic_schools)
             "enrollment_confirmation" -> holder.imageView.setImageResource(R.drawable.ic_check_circle)
+            "enrollment_accepted" -> holder.imageView.setImageResource(R.drawable.ic_check_circle)
+            "enrollment_rejected" -> holder.imageView.setImageResource(R.drawable.ic_close)
+            "enrollment_completed" -> holder.imageView.setImageResource(R.drawable.ic_check_circle)
             else -> holder.imageView.setImageResource(R.drawable.ic_notification)
         }
 
         // Show/hide unread indicator
         holder.viewUnreadIndicator.visibility = if (notification.isRead) View.GONE else View.VISIBLE
 
-        // Set background color based on read status
+        // Set background and text colors
         if (notification.isRead) {
             holder.itemView.setBackgroundColor(holder.itemView.context.getColor(android.R.color.white))
-            holder.textViewTitle.setTextColor(holder.itemView.context.getColor(android.R.color.black))
             holder.textViewMessage.setTextColor(holder.itemView.context.getColor(R.color.text_secondary))
         } else {
             holder.itemView.setBackgroundColor(holder.itemView.context.getColor(R.color.unread_background))
-            holder.textViewTitle.setTextColor(holder.itemView.context.getColor(android.R.color.black))
             holder.textViewMessage.setTextColor(holder.itemView.context.getColor(android.R.color.black))
         }
+
+        holder.textViewTitle.setTextColor(holder.itemView.context.getColor(android.R.color.black))
 
         holder.itemView.setOnClickListener {
             onItemClick(notification)
         }
     }
-
     override fun getItemCount(): Int = notifications.size
 }

@@ -50,21 +50,28 @@ class CoursePagingAdapter(
             startTime.text = course.startTime
             price.text = course.formattedPrice
 
+            // Load image with Glide
             if (course.poster.isNotEmpty()) {
                 Glide.with(itemView.context)
                     .load(course.poster)
                     .placeholder(R.drawable.avatar1)
                     .error(R.drawable.avatar1)
+                    .centerCrop()
                     .into(image)
             } else {
                 image.setImageResource(R.drawable.avatar1)
             }
 
+            // Set click listener
             itemView.setOnClickListener {
                 if (course.id.isNotEmpty()) {
                     onItemClick(course)
                 }
             }
+
+            // Add ripple effect
+            itemView.isClickable = true
+            itemView.isFocusable = true
         }
     }
 }

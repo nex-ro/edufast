@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.facebook.shimmer.ShimmerFrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:shimmer_duration="1200">
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="#9F9F9F"
+        app:cardCornerRadius="20dp"
+        app:cardElevation="10dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="24dp"
+        android:paddingEnd="24dp"
+        android:paddingTop="24dp"
+        android:background="#9D9D9D"
+        android:paddingBottom="24dp">
+
+        <!-- Foto & Detail -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="top"
+            android:orientation="horizontal">
+
+            <!-- Shimmer Avatar -->
+            <View
+                android:layout_width="64dp"
+                android:layout_height="64dp"
+                android:layout_marginEnd="16dp"
+                android:background="@drawable/shimmer_placeholder"
+                android:backgroundTint="#E0E0E0" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <!-- Shimmer Name -->
+                <View
+                    android:layout_width="120dp"
+                    android:layout_height="20dp"
+                    android:background="@drawable/shimmer_placeholder"
+                    android:backgroundTint="#E0E0E0" />
+
+                <!-- Shimmer Phone -->
+                <View
+                    android:layout_width="100dp"
+                    android:layout_height="16dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shimmer_placeholder"
+                    android:backgroundTint="#E0E0E0" />
+
+                <!-- Shimmer Course Name -->
+                <View
+                    android:layout_width="150dp"
+                    android:layout_height="16dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shimmer_placeholder"
+                    android:backgroundTint="#E0E0E0" />
+
+                <!-- Shimmer Amount -->
+                <View
+                    android:layout_width="80dp"
+                    android:layout_height="16dp"
+                    android:layout_marginTop="4dp"
+                    android:background="@drawable/shimmer_placeholder"
+                    android:backgroundTint="#E0E0E0" />
+
+                <!-- Shimmer Status -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="60dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/shimmer_placeholder"
+                        android:backgroundTint="#E0E0E0" />
+
+                    <View
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/shimmer_placeholder"
+                        android:backgroundTint="#E0E0E0" />
+                </LinearLayout>
+
+                <!-- Shimmer Date -->
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <View
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_marginEnd="6dp"
+                        android:background="@drawable/shimmer_placeholder"
+                        android:backgroundTint="#E0E0E0" />
+
+                    <View
+                        android:layout_width="100dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/shimmer_placeholder"
+                        android:backgroundTint="#E0E0E0" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Garis Pembatas -->
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_marginTop="16dp"
+            android:background="#BBBBBB" />
+
+        <!-- Shimmer Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingTop="16dp">
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/shimmer_placeholder"
+                android:backgroundTint="#E0E0E0" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_marginEnd="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/shimmer_placeholder"
+                android:backgroundTint="#E0E0E0" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="36dp"
+                android:layout_weight="1"
+                android:background="@drawable/shimmer_placeholder"
+                android:backgroundTint="#E0E0E0" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.cardview.widget.CardView>
+</com.facebook.shimmer.ShimmerFrameLayout>

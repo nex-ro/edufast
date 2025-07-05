@@ -2,11 +2,9 @@ package com.example.tampilansiswa.Auth
 
 import android.content.Intent
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.util.Base64
-import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
@@ -16,14 +14,16 @@ import com.example.tampilansiswa.databinding.ActivitySignInBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.io.ByteArrayOutputStream
+import android.text.InputType
+import java.io.File          // ⬅️ Tambahkan ini
+import java.io.FileOutputStream
+import android.content.SharedPreferences
+import android.view.View
+
 class SignInActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignInBinding
     private lateinit var auth: FirebaseAuth
     private lateinit var firestore: FirebaseFirestore
-
-    companion object {
-        private const val TAG = "SignInActivity"
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,25 +33,49 @@ class SignInActivity : AppCompatActivity() {
         auth = FirebaseAuth.getInstance()
         firestore = FirebaseFirestore.getInstance()
 
+        val passwordEditText = binding.etPassword
+        val togglePassword = binding.ivTogglePassword
+        var isPasswordVisible = false
+
+        togglePassword.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            passwordEditText.inputType = if (isPasswordVisible) {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            } else {
+                InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
+            passwordEditText.setSelection(passwordEditText.text.length)
+            togglePassword.setImageResource(
+                if (isPasswordVisible) R.drawable.ic_visibility_off else R.drawable.ic_visibility
+            )
+        }
+
         binding.btnSignIn.setOnClickListener {
             val email = binding.etEmail.text.toString().trim()
             val password = binding.etPassword.text.toString().trim()
 
             if (email.isEmpty() || password.isEmpty()) {
-                Toast.makeText(this, "Email dan Password tidak boleh kosong", Toast.LENGTH_SHORT).show()
-            } else {
-                auth.signInWithEmailAndPassword(email, password)
-                    .addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            fetchUserDataAndSave()
-                        } else {
-                            Toast.makeText(this, "Login gagal: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                        }
-                    }
+                showError("Email dan Password tidak boleh kosong")
+                Toast.makeText(this, "Mohon lengkapi email dan password", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
             }
+            showLoading(true)
+
+            auth.signInWithEmailAndPassword(email, password)
+                .addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        hideError()
+                        fetchUserDataAndSave()
+                    } else {
+                        showLoading(false)
+                        showError("Login gagal: ${task.exception?.message}")
+                        Toast.makeText(this, "Login gagal: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
         }
 
         binding.txtForgotPassword.setOnClickListener {
+            showError("Fitur belum tersedia")
             Toast.makeText(this, "Fitur belum tersedia", Toast.LENGTH_SHORT).show()
         }
 
@@ -62,6 +86,21 @@ class SignInActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener {
             finish()
         }
+    }
+
+    private fun showError(message: String) {
+        binding.tvErrorMessage.apply {
+            text = message
+            visibility = android.view.View.VISIBLE
+        }
+    }
+
+    private fun showLoading(isLoading: Boolean) {
+        binding.loadingOverlay.visibility = if (isLoading) View.VISIBLE else View.GONE
+    }
+
+    private fun hideError() {
+        binding.tvErrorMessage.visibility = android.view.View.GONE
     }
 
     private fun fetchUserDataAndSave() {
@@ -76,18 +115,17 @@ class SignInActivity : AppCompatActivity() {
                     val role = document.getString("role") ?: "siswa"
                     val isActive = document.getBoolean("isActive") ?: true
                     val createdAt = document.getLong("createdAt") ?: System.currentTimeMillis()
-                    val profileImage = document.getString("profileImage") // Ambil gambar dari Firestore
-
+                    val profileImage = document.getString("imagePath")
+                    showLoading(false)
                     saveUserToPreferences(email, nama, phone, role, isActive, createdAt, profileImage)
-
-                    Log.d(TAG, "Login successful for user: $nama with role: $role")
-                    Toast.makeText(this, "Login berhasil", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Berhasil masuk sebagai $nama", Toast.LENGTH_SHORT).show()
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
                 }
-                .addOnFailureListener { exception ->
-                    Log.e(TAG, "Failed to fetch user data: ${exception.message}")
-                    Toast.makeText(this, "Gagal ambil data user: ${exception.message}", Toast.LENGTH_SHORT).show()
+                .addOnFailureListener {
+                    showLoading(false)
+                    showError("Gagal mengambil data user: ${it.message}")
+                    Toast.makeText(this, "Gagal mengambil data user", Toast.LENGTH_SHORT).show()
                     saveUserToPreferences(
                         email = currentUser.email ?: "",
                         nama = currentUser.displayName ?: "User",
@@ -95,7 +133,7 @@ class SignInActivity : AppCompatActivity() {
                         role = "siswa",
                         isActive = true,
                         createdAt = System.currentTimeMillis(),
-                        profileImage = null // Tidak ada gambar dari Firestore
+                        profileImage = null
                     )
                     startActivity(Intent(this, MainActivity::class.java))
                     finish()
@@ -114,79 +152,58 @@ class SignInActivity : AppCompatActivity() {
     ) {
         val sharedPref = getSharedPreferences("UserSession", MODE_PRIVATE)
         val editor = sharedPref.edit()
-
-        // Simpan data user biasa
+        editor.putString("uid", auth.currentUser?.uid ?: "")
         editor.putLong("createdAt", createdAt)
         editor.putString("email", email)
         editor.putBoolean("isActive", isActive)
         editor.putString("nama", nama)
         editor.putString("phone", phone)
         editor.putString("role", role)
-        editor.putString("uid", auth.currentUser?.uid ?: "")
-
-        // Handle profile image
         handleProfileImage(editor, profileImage)
-
         editor.apply()
-
-        Log.d(TAG, "User data saved to preferences successfully")
     }
 
-    private fun handleProfileImage(editor: android.content.SharedPreferences.Editor, profileImage: String?) {
+    private fun handleProfileImage(editor: SharedPreferences.Editor, profileImage: String?) {
         try {
             if (!profileImage.isNullOrEmpty()) {
                 editor.putString("profileImage", profileImage)
-                Log.d(TAG, "Profile image from Firestore saved to preferences")
             } else {
-                // Jika tidak ada gambar dari Firestore, cek apakah sudah ada di preferences
                 val sharedPref = getSharedPreferences("UserSession", MODE_PRIVATE)
                 val existingImage = sharedPref.getString("profileImage", null)
 
                 if (existingImage.isNullOrEmpty()) {
-                    // Jika tidak ada gambar sama sekali, buat default image
-                    val defaultImageBase64 = createDefaultProfileImageBase64()
-                    editor.putString("profileImage", defaultImageBase64)
-                    Log.d(TAG, "Default profile image created and saved")
-                } else {
-                    Log.d(TAG, "Existing profile image retained")
+                    val defaultImagePath = saveDefaultAvatarToInternalStorage()
+                    editor.putString("profileImage", defaultImagePath)
                 }
             }
-        } catch (e: Exception) {
-            Log.e(TAG, "Error handling profile image: ${e.message}")
-            // Jika terjadi error, tetap buat default image
-            try {
-                val defaultImageBase64 = createDefaultProfileImageBase64()
-                editor.putString("profileImage", defaultImageBase64)
-                Log.d(TAG, "Default profile image created after error")
-            } catch (defaultError: Exception) {
-                Log.e(TAG, "Error creating default profile image: ${defaultError.message}")
-            }
+        } catch (_: Exception) {
+            val defaultImagePath = saveDefaultAvatarToInternalStorage()
+            editor.putString("profileImage", defaultImagePath)
         }
     }
 
-    private fun createDefaultProfileImageBase64(): String {
+    private fun saveDefaultAvatarToInternalStorage(): String {
         return try {
-            // Ambil drawable default (avatar1)
             val drawable = ContextCompat.getDrawable(this, R.drawable.avatar1)
             val bitmap = (drawable as BitmapDrawable).bitmap
+            val resized = Bitmap.createScaledBitmap(bitmap, 400, 400, true)
 
-            // Resize bitmap jika terlalu besar (opsional, untuk menghemat space)
-            val resizedBitmap = Bitmap.createScaledBitmap(bitmap, 200, 200, true)
+            val file = File(filesDir, "profile/default_profile.jpg")
+            file.parentFile?.mkdirs() // pastikan direktori ada
+            val outStream = file.outputStream()
+            resized.compress(Bitmap.CompressFormat.JPEG, 90, outStream)
+            outStream.flush()
+            outStream.close()
 
-            // Convert ke Base64
-            val byteArrayOutputStream = ByteArrayOutputStream()
-            resizedBitmap.compress(Bitmap.CompressFormat.PNG, 80, byteArrayOutputStream)
-            val byteArray = byteArrayOutputStream.toByteArray()
-
-            Base64.encodeToString(byteArray, Base64.DEFAULT)
+            file.absolutePath
         } catch (e: Exception) {
-            Log.e(TAG, "Error creating default profile image: ${e.message}")
-            "" // Return empty string jika gagal
+            ""
         }
     }
+
     override fun onStart() {
         super.onStart()
-        if (FirebaseAuth.getInstance().currentUser != null) {
+        if (auth.currentUser != null) {
             startActivity(Intent(this, MainActivity::class.java))
             finish()
         }
