@@ -77,14 +77,7 @@
                     android:textStyle="bold"
                     android:textSize="16sp" />
 
-                <TextView
-                    android:id="@+id/txtMapel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Fisika - Kimia"
-                    android:textColor="#777777"
-                    android:textSize="14sp"
-                    android:layout_marginTop="4dp" />
+
 
                 <TextView
                     android:id="@+id/txtUniversitas"

@@ -94,6 +94,7 @@ class SignUpActivity : AppCompatActivity() {
 
         binding.txtSignIn.setOnClickListener {
             startActivity(Intent(this, SignInActivity::class.java))
+            finish()
         }
 
         binding.btnBack.setOnClickListener {

@@ -48,7 +48,7 @@ class DetailGuru : Fragment() {
         firestore = FirebaseFirestore.getInstance()
 
         val nama = arguments?.getString("nama") ?: ""
-        val mapel = arguments?.getString("subjek") ?: ""
+        val mapel = arguments?.getString("mapel") ?: ""
         val universitas = arguments?.getString("universitas") ?: ""
         val gender = arguments?.getString("gender") ?: ""
         val phone = arguments?.getString("phone") ?: ""
@@ -64,14 +64,13 @@ class DetailGuru : Fragment() {
         // Set data ke views with safety check
         if (_binding != null) {
             binding.txtNama.text = nama
-            binding.txtMapel.text = mapel
             binding.txtUniversitas.text = universitas
             binding.txtGender.text = gender
             binding.txtPhone.text = phone
             binding.txtEmail.text = email
             binding.txtTentang.text = tentang
             binding.txtSiswa.text = siswa.toString()
-            binding.txtRating.text = String.format("%.1f", rating)
+            binding. txtRating.text = String.format("%.1f", rating)
             binding.txtUlasanCount.text = ulasanCount.toString()
             binding.imgGuru.setImageResource(gambar)
         }

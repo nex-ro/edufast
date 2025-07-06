@@ -74,11 +74,6 @@ class SignInActivity : AppCompatActivity() {
                 }
         }
 
-        binding.txtForgotPassword.setOnClickListener {
-            showError("Fitur belum tersedia")
-            Toast.makeText(this, "Fitur belum tersedia", Toast.LENGTH_SHORT).show()
-        }
-
         binding.txtSignUp.setOnClickListener {
             startActivity(Intent(this, SignUpActivity::class.java))
         }

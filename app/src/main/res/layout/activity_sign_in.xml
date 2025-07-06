@@ -194,15 +194,6 @@
                 </LinearLayout>
             </RelativeLayout>
 
-            <!-- Forgot Password -->
-            <TextView
-                android:id="@+id/txtForgotPassword"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Forgot your password ?"
-                android:textColor="#3B82F6"
-                android:textSize="14sp"
-                android:layout_marginBottom="32dp" />
 
             <!-- Sign In Button -->
             <Button

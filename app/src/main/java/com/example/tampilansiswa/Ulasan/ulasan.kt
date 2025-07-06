@@ -58,7 +58,7 @@ class ulasan : Fragment() {
         loadTeacherAndCourseData()
         checkIfAlreadyReviewed()
 
-        view.findViewById<ImageView>(R.id.btnBack).setOnClickListener{
+        view.findViewById<ImageView>(R.id.btn_backulasan).setOnClickListener{
             requireActivity().supportFragmentManager.popBackStack()
         }
         btnSimpan.setOnClickListener {
@@ -141,7 +141,7 @@ class ulasan : Fragment() {
             .addOnSuccessListener { courseDoc ->
                 if (courseDoc.exists()) {
                     val courseName = courseDoc.getString("courseName") ?: "Unknown Course"
-                    val subject = courseDoc.getString("subjek") ?: "Unknown Subject"
+                    val subject = courseDoc.getString("subject") ?: "Unknown Subject"
 
                     txtMapel.text = "$subject - $courseName"
                 } else {

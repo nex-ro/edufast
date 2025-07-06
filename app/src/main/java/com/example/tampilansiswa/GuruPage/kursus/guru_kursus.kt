@@ -133,7 +133,8 @@ class guru_kursus : Fragment() {
                 }
 
                 if (snapshot != null) {
-                    val sharedPref = requireContext().getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
+                    val ctx = context ?: return@addSnapshotListener
+                    val sharedPref = ctx.getSharedPreferences("UserSession", android.content.Context.MODE_PRIVATE)
                     val uid = sharedPref.getString("uid", "") ?: ""
 
                     allCourses = snapshot.documents.mapNotNull { doc ->
@@ -379,6 +380,11 @@ class guru_kursus : Fragment() {
 
         if (durationInt == null || durationInt <= 0) {
             showError("Durasi harus berupa angka yang valid")
+            return
+        }
+        if (uid.isEmpty()) {
+            showError("Gagal menyimpan kursus: UID pengguna tidak ditemukan.")
+
             return
         }
 

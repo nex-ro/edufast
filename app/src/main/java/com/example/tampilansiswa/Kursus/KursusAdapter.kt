@@ -180,8 +180,9 @@ class KursusAdapter(
                     }
                     "completed", "selesai" -> {
                         binding.btnLihatBukti.visibility = View.GONE
-                        binding.btnJadwalUlang.visibility = View.VISIBLE
+                        binding.btnJadwalUlang.visibility = View.GONE
                         binding.btnBeriUlasan.visibility = View.VISIBLE
+                        binding.viewLine.visibility = View.VISIBLE
                         binding.viewLine.visibility = View.VISIBLE
                         binding.layoutTombol.visibility = View.VISIBLE
                     }
